@@ -1,0 +1,22 @@
+{
+  "name": "auven",
+  "version": "1.0.0",
+  "description": "AUVEN agent trust gateway",
+  "main": "server.cjs",
+  "scripts": {
+    "start": "node server.cjs",
+    "test": "node --test",
+    "db:migrate": "node db/migrate.cjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": { "node": "22.x" },
+  "type": "commonjs",
+  "dependencies": {
+    "@noble/post-quantum": "^0.7.1",
+    "ethers": "^6.17.0",
+    "pg": "^8.23.1"
+  }
+}

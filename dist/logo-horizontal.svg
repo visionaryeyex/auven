@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 72" role="img" aria-labelledby="title desc">
+  <title id="title">AUVEN</title><desc id="desc">Agent Core symbol and AUVEN wordmark.</desc>
+  <defs><mask id="cut"><rect width="1024" height="1024" fill="#fff"/><path d="M512 475 612 575 512 675 412 575Z" fill="#000"/></mask></defs>
+  <g transform="scale(.08)"><g fill="#7057E8" mask="url(#cut)"><path d="M512 190 824 790H715L512 393 309 790H200Z"/><path d="M357 536H667V614H357Z"/></g><path fill="#7057E8" fill-rule="evenodd" d="M512 515 572 575 512 635 452 575ZM512 540 477 575 512 610 547 575Z"/></g>
+  <text x="82" y="50.5" fill="#24202F" font-family="Inter, Arial, Helvetica, sans-serif" font-size="37" font-weight="750" letter-spacing="5.5">AUVEN</text>
+</svg>
