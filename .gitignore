@@ -6,3 +6,5 @@ outputs/
 !.env.example
 .vercel/
 .openai/
+assets/
+BRAND.md
