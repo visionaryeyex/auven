@@ -1,26 +1,29 @@
-<div align="center">
-  <img src="dist/logo-horizontal.svg" alt="AUVEN" width="320">
-  <p><strong>Identity, spending controls, and verifiable records for external AI agents.</strong></p>
-</div>
+<p align="center">
+  <img src="assets/auven-x-banner.png" alt="AUVEN — Control what agents do. Verify what happened." width="100%">
+</p>
 
-## Why AUVEN
+<p align="center">
+  <a href="#run-locally"><img src="https://img.shields.io/badge/Node.js-22-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js 22"></a>
+  <a href="#hosted-setup"><img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL"></a>
+  <a href="#proofs"><img src="https://img.shields.io/badge/ML--DSA--65-post--quantum-7057E8?style=flat-square" alt="ML-DSA-65"></a>
+  <a href="#proofs"><img src="https://img.shields.io/badge/Robinhood%20Chain-4663-24202F?style=flat-square" alt="Robinhood Chain 4663"></a>
+  <a href="#hosted-setup"><img src="https://img.shields.io/badge/Vercel-deployed-000000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel"></a>
+</p>
 
-An agent can use a paid API in seconds. Knowing which agent made the call, whether it was allowed, and what it cost is harder. AUVEN puts a controlled route between an external agent and a supported provider. Each agent has its own credential and daily limit. The gateway decides whether to forward a request and records the decision.
+# AUVEN
 
-The same workspace can issue a signed passport for an agent and signed checkpoints of its activity. These records can be exported and verified without access to the AUVEN server.
+AUVEN is a gateway for AI agents that run in your own applications. It gives each connected agent a credential and a daily spending limit, checks supported requests before they reach the provider, and records the decision. Agent passports and activity checkpoints can be signed with ML-DSA-65 and verified independently.
 
-AUVEN controls requests sent through its gateway. Direct calls made with another provider key are outside its reach.
+The gateway controls traffic sent through it. An agent that calls a provider directly with another key is outside that control.
 
-## What is in this repository
+## What works
 
-- A public site and workspace dashboard in `dist/`.
-- Registration for workspaces and external agents, with separate credentials.
-- Agent stop/resume, daily budget reservation, idempotency, and an activity log.
-- An OpenAI chat completion route that runs when a server-side provider key is configured.
-- ML-DSA-65 signing for agent passports and activity checkpoints, plus a standalone verifier.
-- Code to submit a signed proof commitment to Robinhood Chain mainnet and verify its transaction. A funded signer is required to use that route.
+- **Agent identity.** Register an external agent in a workspace and issue a credential. The agent's passport is signed when it is registered.
+- **Request control.** Stop or resume an agent, reserve against its daily limit, reject duplicate request IDs, and record allowed and denied calls. The supported provider route is OpenAI chat completions when a server key is configured.
+- **Verifiable records.** Sign activity checkpoints with ML-DSA-65, export proofs, and reject changed payloads or signatures with the standalone verifier.
+- **Mainnet commitment.** Submit the hash of a signed proof in a transaction on Robinhood Chain mainnet, then check the transaction receipt, signer, and exact input. This requires a dedicated funded signer.
 
-The API and core checks have been tested locally. The PostgreSQL and Vercel setup is included for deployment; it still needs validation against the project's hosted environment.
+AUVEN registers and controls agents you already run; it does not host or create their runtime. Spending is estimated from the requested token limit and is not a provider invoice.
 
 ## Run locally
 
@@ -32,15 +35,18 @@ npm test
 npm start
 ```
 
-Open `http://127.0.0.1:4174`. By default, local data is stored in `.data/` using SQLite. The directory is ignored by Git. Create a workspace in the dashboard, save the admin token displayed once, then register an agent and save its gateway credential. Tokens are stored as hashes and cannot be recovered from the database.
+Open `http://127.0.0.1:4174`. Local data is stored in SQLite under `.data/`, which Git ignores. The dashboard can create a workspace and register an agent. Save the workspace admin token and the agent credential when they appear: only hashes are stored, so neither can be recovered later.
 
-To use PostgreSQL, set `DATABASE_URL`, run `npm run db:migrate`, then start the server. The schema is in `db/schema.sql`.
+Set `AUVEN_OPENAI_API_KEY` to exercise the supported provider route. With no provider key, identity, policy, signing, export, and verification remain available locally.
 
 ## Connect an agent
 
-The agent runs in your application. AUVEN gives it a credential for the gateway; registration does not run or host the agent.
+1. Create a workspace in the dashboard. On a hosted deployment, provide the `AUVEN_SETUP_TOKEN` configured by the operator.
+2. Save the admin token shown once.
+3. Open **Agents** and select **Connect agent**. Enter its name, purpose, and daily limit.
+4. Save the credential shown once, then use it in requests from the agent you run.
 
-Create an agent with the workspace admin token:
+The equivalent API call is:
 
 ```bash
 curl -X POST http://127.0.0.1:4174/api/agents \
@@ -49,7 +55,7 @@ curl -X POST http://127.0.0.1:4174/api/agents \
   -d '{"name":"Research assistant","purpose":"Summarize research","daily_limit_cents":1000}'
 ```
 
-With `AUVEN_OPENAI_API_KEY` configured on the server, the agent can make a controlled request:
+A controlled provider request needs the agent credential and a new idempotency key:
 
 ```bash
 curl -X POST http://127.0.0.1:4174/api/gateway/chat \
@@ -59,47 +65,47 @@ curl -X POST http://127.0.0.1:4174/api/gateway/chat \
   -d '{"messages":[{"role":"user","content":"Hello"}],"max_tokens":100}'
 ```
 
-The gateway checks the agent's status and reserves budget before calling the provider. A repeated idempotency key returns a conflict. Stop an agent with `PATCH /api/agents/:id/status` and `{ "status": "stopped" }`; subsequent gateway requests are denied. Workspace owners can inspect decisions with `GET /api/events`.
+The gateway checks the agent's status and budget before calling the provider. Stop an agent from **Agents**, or call `PATCH /api/agents/:id/status` with `{"status":"stopped"}`. Activity appears under **Activity**.
 
-| Route | Purpose |
-| --- | --- |
-| `POST /api/workspaces` | Create a workspace and receive its admin token once |
-| `GET /api/agents`, `POST /api/agents` | List or register external agents |
-| `PATCH /api/agents/:id/status` | Stop or resume an agent |
-| `POST /api/gateway/chat` | Apply policy and forward a supported provider call |
-| `GET /api/events` | Read workspace activity |
-| `POST /api/checkpoints`, `GET /api/proofs` | Sign a checkpoint and inspect proofs |
-| `POST /api/proofs/:id/publish` | Submit a proof commitment when a mainnet signer is configured |
-| `GET /api/proofs/:id/inclusion` | Check the mainnet transaction and commitment |
-| `POST /api/verify` | Check a proof signature |
+## Proofs
 
-## Verify a proof
-
-AUVEN signs the canonical passport or checkpoint payload with ML-DSA-65. The exported proof contains its payload, signature, public key, format version, and SHA-256 digest.
+The signed format contains the canonical payload, ML-DSA-65 signature, public key, format version, and SHA-256 digest. Export a passport from **Proofs**, or create an activity checkpoint with `POST /api/checkpoints`.
 
 ```bash
 node verify.cjs path/to/proof.json
 node verify.cjs path/to/proof.json 0xTRANSACTION_HASH
 ```
 
-The first command verifies the document against the included public key. The second additionally checks the transaction on Robinhood Chain mainnet (chain ID 4663), including the receipt and exact commitment bytes. The onchain transaction records a hash of the signed proof; it does not execute ML-DSA verification in a smart contract. A valid signature also does not establish who controlled the public key or whether the agent behaved correctly.
+The first command checks the signature and digest. The second also checks inclusion on Robinhood Chain mainnet (chain ID 4663). AUVEN currently writes a commitment in the input of a zero-value transaction to its own signer address. There is no deployed AUVEN contract, and the chain does not verify the ML-DSA signature. A valid proof establishes that its bytes match the signature and recorded commitment; it does not establish that the underlying activity was truthful.
 
-## Deploy
-
-`vercel.json` serves `dist/` and the API Function in `api/[...path].js`. Hosted data uses PostgreSQL. Run `npm run db:migrate` against the database before deploying, then configure these server-side environment variables in Vercel:
-
-| Variable | Used for |
+| Route | Purpose |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection |
-| `AUVEN_SETUP_TOKEN` | Workspace creation control |
-| `AUVEN_PQ_SIGNING_SEED` | Stable ML-DSA-65 signing identity; 32 random bytes as 64 hex characters |
-| `AUVEN_OPENAI_API_KEY` | Supported provider calls |
-| `AUVEN_MODEL` | Model name; defaults to `gpt-4o-mini` |
-| `AUVEN_RH_PRIVATE_KEY` | Dedicated, funded mainnet signer for proof publication |
-| `AUVEN_RH_RPC_URL` | Robinhood Chain RPC; a production endpoint is recommended |
+| `POST /api/workspaces` | Create a workspace; return its admin token once |
+| `GET /api/agents`, `POST /api/agents` | List or register connected agents |
+| `PATCH /api/agents/:id/status` | Stop or resume an agent |
+| `POST /api/gateway/chat` | Apply policy and forward a supported request |
+| `GET /api/events` | Read the workspace activity log |
+| `POST /api/checkpoints`, `GET /api/proofs` | Sign a checkpoint and inspect proofs |
+| `POST /api/proofs/:id/publish` | Submit a proof commitment when a mainnet signer is configured |
+| `GET /api/proofs/:id/inclusion` | Check the transaction and commitment |
+| `POST /api/verify` | Verify a signed proof without database access |
 
-Use `.env.example` as a field guide. Keep real values in server-side secret storage, never in the repository or browser bundle. The signing seed must be backed up: changing it creates a different signing identity. See [SECURITY.md](SECURITY.md) for reporting guidance.
+## Hosted setup
 
-## Code map
+`vercel.json` serves `dist/` and the API Function. Hosted data uses PostgreSQL; set `DATABASE_URL` and apply `db/schema.sql` with `npm run db:migrate` before using database-backed routes. The server will return `database_not_configured` until a connection string is present.
 
-`api-handler.cjs` handles the API; `db.cjs` and `db-postgres.cjs` provide local and hosted storage; `proof.cjs` signs documents; `chain.cjs` handles the mainnet commitment; `verify.cjs` verifies exported proofs. The tests in `test/` cover the API flow, policy decisions, workspace isolation, tampering, and chain receipt checks.
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL connection string; use Supabase's transaction pooler on port 6543 for Vercel |
+| `AUVEN_SETUP_TOKEN` | Required header value for hosted workspace creation |
+| `AUVEN_PQ_SIGNING_SEED` | Stable signing identity: 32 random bytes encoded as 64 hex characters |
+| `AUVEN_OPENAI_API_KEY` | Enables the supported OpenAI gateway route |
+| `AUVEN_MODEL` | Optional model name; defaults to `gpt-4o-mini` |
+| `AUVEN_RH_PRIVATE_KEY` | Dedicated funded signer for mainnet publication |
+| `AUVEN_RH_RPC_URL` | Optional Robinhood Chain RPC override |
+
+Configure values as server-side Vercel secrets and redeploy after changing them. Never put a key in the browser bundle or repository. Back up the PQ seed: changing it creates a different signing identity. See [SECURITY.md](SECURITY.md).
+
+## Code
+
+`api-handler.cjs` implements the API; `db.cjs` and `db-postgres.cjs` provide local and hosted storage; `proof.cjs` signs and verifies records; `chain.cjs` submits and checks mainnet commitments; `verify.cjs` is the standalone verifier. Tests under `test/` cover the API flow, policy decisions, workspace isolation, proof tampering, and receipt checks.

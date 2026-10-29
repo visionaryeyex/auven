@@ -6,5 +6,6 @@ outputs/
 !.env.example
 .vercel/
 .openai/
-assets/
+assets/*
+!assets/auven-x-banner.png
 BRAND.md
