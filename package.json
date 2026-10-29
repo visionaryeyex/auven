@@ -5,18 +5,31 @@
   "main": "server.cjs",
   "scripts": {
     "start": "node server.cjs",
+    "build": "esbuild src/auth.js --bundle --minify --format=iife --platform=browser --target=es2022 --outfile=dist/auth.js",
     "test": "node --test",
-    "db:migrate": "node db/migrate.cjs"
+    "db:migrate": "node db/migrate.cjs",
+    "contract:compile": "node scripts/compile-registry.cjs",
+    "contract:deploy": "node scripts/deploy-registry.cjs"
   },
   "keywords": [],
   "author": "",
   "license": "UNLICENSED",
   "private": true,
-  "engines": { "node": "22.x" },
+  "engines": {
+    "node": "22.x"
+  },
   "type": "commonjs",
   "dependencies": {
     "@noble/post-quantum": "^0.7.1",
+    "@supabase/supabase-js": "^2.118.0",
     "ethers": "^6.17.0",
     "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "solc": "0.8.36"
+  },
+  "overrides": {
+    "tmp": "^0.2.7"
   }
 }

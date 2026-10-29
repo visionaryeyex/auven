@@ -21,7 +21,7 @@ The gateway controls traffic sent through it. An agent that calls a provider dir
 - **Agent identity.** Register an external agent in a workspace and issue a credential. The agent's passport is signed when it is registered.
 - **Request control.** Stop or resume an agent, reserve against its daily limit, reject duplicate request IDs, and record allowed and denied calls. The supported provider route is OpenAI chat completions when a server key is configured.
 - **Verifiable records.** Sign activity checkpoints with ML-DSA-65, export proofs, and reject changed payloads or signatures with the standalone verifier.
-- **Mainnet commitment.** Submit the hash of a signed proof in a transaction on Robinhood Chain mainnet, then check the transaction receipt, signer, and exact input. This requires a dedicated funded signer.
+- **Mainnet commitment.** Submit the hash of a signed proof on Robinhood Chain mainnet, then check the receipt, signer, target, and commitment. A small registry contract is included; publication uses it after deployment and configuration. Until then, the existing signer transaction mode remains available.
 
 AUVEN registers and controls agents you already run; it does not host or create their runtime. Spending is estimated from the requested token limit and is not a provider invoice.
 
@@ -41,8 +41,8 @@ Set `AUVEN_OPENAI_API_KEY` to exercise the supported provider route. With no pro
 
 ## Connect an agent
 
-1. Create a workspace in the dashboard. On a hosted deployment, provide the `AUVEN_SETUP_TOKEN` configured by the operator.
-2. Save the admin token shown once.
+1. Sign in and create a workspace in the dashboard. If hosted authentication has not been configured, use the operator's `AUVEN_SETUP_TOKEN` to create a legacy workspace.
+2. Save the admin token shown once as a recovery and API credential.
 3. Open **Agents** and select **Connect agent**. Enter its name, purpose, and daily limit.
 4. Save the credential shown once, then use it in requests from the agent you run.
 
@@ -73,10 +73,10 @@ The signed format contains the canonical payload, ML-DSA-65 signature, public ke
 
 ```bash
 node verify.cjs path/to/proof.json
-node verify.cjs path/to/proof.json 0xTRANSACTION_HASH
+node verify.cjs path/to/proof.json 0xTRANSACTION_HASH 0xTRUSTED_PUBLISHER [0xREGISTRY_ADDRESS]
 ```
 
-The first command checks the signature and digest. The second also checks inclusion on Robinhood Chain mainnet (chain ID 4663). AUVEN currently writes a commitment in the input of a zero-value transaction to its own signer address. There is no deployed AUVEN contract, and the chain does not verify the ML-DSA signature. A valid proof establishes that its bytes match the signature and recorded commitment; it does not establish that the underlying activity was truthful.
+The first command checks the signature and digest. The second also checks inclusion on Robinhood Chain mainnet (chain ID 4663) against the publisher address you trust. Supply the registry address if that proof was published through the deployed registry. Without a registry configured, the server writes the commitment in a zero-value transaction to its dedicated signer. The chain does not verify the ML-DSA signature. A valid proof establishes that its bytes match the signature and recorded commitment; it does not establish that the underlying activity was truthful.
 
 | Route | Purpose |
 | --- | --- |
@@ -97,14 +97,23 @@ The first command checks the signature and digest. The second also checks inclus
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection string; use Supabase's transaction pooler on port 6543 for Vercel |
+| `AUVEN_SUPABASE_URL` | Supabase project URL for email and wallet sign-in |
+| `AUVEN_SUPABASE_PUBLISHABLE_KEY` | Public Supabase client key for Auth; never use a service role key here |
 | `AUVEN_SETUP_TOKEN` | Required header value for hosted workspace creation |
 | `AUVEN_PQ_SIGNING_SEED` | Stable signing identity: 32 random bytes encoded as 64 hex characters |
 | `AUVEN_OPENAI_API_KEY` | Enables the supported OpenAI gateway route |
 | `AUVEN_MODEL` | Optional model name; defaults to `gpt-4o-mini` |
 | `AUVEN_RH_PRIVATE_KEY` | Dedicated funded signer for mainnet publication |
 | `AUVEN_RH_RPC_URL` | Optional Robinhood Chain RPC override |
+| `AUVEN_RH_REGISTRY_ADDRESS` | Optional deployed proof registry; required to use the contract route |
 
-Configure values as server-side Vercel secrets and redeploy after changing them. Never put a key in the browser bundle or repository. Back up the PQ seed: changing it creates a different signing identity. See [SECURITY.md](SECURITY.md).
+Configure sensitive values as server-side Vercel secrets and redeploy after changing them. The Supabase URL and publishable key are public client configuration; never substitute a service role key. Back up the PQ seed: changing it creates a different signing identity. See [SECURITY.md](SECURITY.md).
+
+Supabase Auth also needs email sign-in, Ethereum Web3 sign-in, the app's allowed redirect URLs, an email OTP template, and production SMTP configured in its dashboard. See [Deployment guide](docs/DEPLOYMENT.md) and [User guide](docs/USER_GUIDE.md) for the exact steps.
+
+For request examples and error handling in an existing agent application, see the [Agent integration guide](docs/AGENT_INTEGRATION.md).
+
+The email and wallet profile flow is implemented in this repository but needs live verification after Auth and the database are configured on the hosted deployment. The registry is compiled and deployable, but no live contract address is claimed here.
 
 ## Code
 
