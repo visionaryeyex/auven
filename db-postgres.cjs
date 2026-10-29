@@ -1,6 +1,8 @@
 const {Pool}=require('pg'),{randomBytes,createHash,timingSafeEqual}=require('node:crypto');
 if(!process.env.DATABASE_URL)throw Error('DATABASE_URL required');
-const pool=new Pool({connectionString:process.env.DATABASE_URL,max:5,connectionTimeoutMillis:10000});
+// Vercel creates a pool per warm function instance. Keep each instance small
+// when connecting through Supabase's transaction pooler.
+const pool=new Pool({connectionString:process.env.DATABASE_URL,max:1,connectionTimeoutMillis:10000});
 const hash=s=>createHash('sha256').update(s).digest('hex'),id=()=>randomBytes(16).toString('hex'),secret=()=>randomBytes(32).toString('base64url');
 async function one(sql,args=[]){return (await pool.query(sql,args)).rows[0]||null}async function many(sql,args=[]){return (await pool.query(sql,args)).rows}async function run(sql,args=[]){return (await pool.query(sql,args)).rowCount}
 async function workspace(token){return token?one('SELECT id,name FROM workspaces WHERE admin_hash=$1',[hash(token)]):null}

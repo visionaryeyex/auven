@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="500" viewBox="0 0 1500 500" role="img" aria-labelledby="title desc">
+  <title id="title">AUVEN — Control what agents do. Verify what happened.</title>
+  <desc id="desc">AUVEN social banner with a geometric agent-gateway symbol in violet.</desc>
+  <defs>
+    <pattern id="grid" width="31" height="31" patternUnits="userSpaceOnUse">
+      <path d="M31 0H0V31" fill="none" stroke="#EAE6F4" stroke-width="1"/>
+    </pattern>
+    <clipPath id="right"><path d="M970 0H1500V500H970Z"/></clipPath>
+    <linearGradient id="wash" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FBFAFE"/><stop offset="1" stop-color="#F2EEFC"/></linearGradient>
+  </defs>
+  <rect width="1500" height="500" fill="#FFFFFF"/>
+  <path d="M0 103H1500M0 430H1500" stroke="#ECEAF1"/>
+  <rect x="42" y="39" width="3" height="27" rx="1.5" fill="#7057E8"/>
+  <g transform="translate(60 30) scale(.063)">
+    <path d="M512 190 824 790H715L512 393 309 790H200Z" fill="#7057E8"/>
+    <path d="M357 536H667V614H357Z" fill="#7057E8"/>
+    <path d="M512 515 572 575 512 635 452 575ZM512 540 477 575 512 610 547 575Z" fill="#7057E8" fill-rule="evenodd"/>
+  </g>
+  <text x="120" y="72" fill="#24202F" font-family="Inter,Arial,sans-serif" font-size="24" font-weight="800" letter-spacing="4">AUVEN</text>
+  <text x="791" y="71" fill="#938D9F" font-family="Consolas,monospace" font-size="11" font-weight="700" letter-spacing="2.2">AGENT TRUST INFRASTRUCTURE</text>
+  <text x="72" y="151" fill="#7057E8" font-family="Consolas,monospace" font-size="12" font-weight="700" letter-spacing="2.5">IDENTITY  /  POLICY  /  PROOF</text>
+  <text x="68" y="235" fill="#24202F" font-family="Inter,Arial,sans-serif" font-size="69" font-weight="750" letter-spacing="-3.4">Control what agents do.</text>
+  <text x="68" y="317" fill="#7057E8" font-family="Inter,Arial,sans-serif" font-size="69" font-weight="750" letter-spacing="-3.4">Verify what happened.</text>
+  <text x="72" y="374" fill="#6F6A7A" font-family="Inter,Arial,sans-serif" font-size="20" font-weight="450">Spending controls and post-quantum signed records for AI agents.</text>
+  <rect x="72" y="449" width="8" height="8" rx="2" fill="#7057E8"/>
+  <text x="93" y="457" fill="#57419E" font-family="Consolas,monospace" font-size="11" font-weight="700" letter-spacing="1.4">BUILT FOR ROBINHOOD CHAIN</text>
+  <g clip-path="url(#right)">
+    <path d="M1110-74 1559 148 1324 607 875 385Z" fill="url(#wash)"/>
+    <path d="M1110-74 1559 148 1324 607 875 385Z" fill="url(#grid)" opacity=".56"/>
+    <path d="M1194 44 1466 245 1194 446 922 245Z" fill="none" stroke="#D4C9F4" stroke-width="2"/>
+    <path d="M1194 98 1393 245 1194 392 995 245Z" fill="none" stroke="#E7E0F8" stroke-width="2"/>
+    <path d="M1194 101 1375 390H1310L1194 201 1078 390H1013Z" fill="#7057E8"/>
+    <path d="M1088 297H1300V341H1088Z" fill="#7057E8"/>
+    <path d="M1194 282 1233 321 1194 360 1155 321Z" fill="#FFFFFF"/>
+    <path d="M1194 295 1220 321 1194 347 1168 321Z" fill="none" stroke="#7057E8" stroke-width="7"/>
+    <path d="M977 245h-59M1468 245h-77M1194 68V21M1194 470v-47" stroke="#B5A5EC" stroke-width="2"/>
+    <circle cx="916" cy="245" r="7" fill="#7057E8"/>
+    <circle cx="1468" cy="245" r="7" fill="#7057E8"/>
+    <circle cx="1194" cy="20" r="7" fill="#7057E8"/>
+    <circle cx="1194" cy="470" r="7" fill="#7057E8"/>
+    <rect x="1280" y="62" width="148" height="31" rx="15.5" fill="#FFFFFF" stroke="#E0D9F1"/>
+    <circle cx="1296" cy="77.5" r="4" fill="#7057E8"/>
+    <text x="1308" y="81" fill="#6351B5" font-family="Consolas,monospace" font-size="11" font-weight="700">ML-DSA-65</text>
+  </g>
+</svg>

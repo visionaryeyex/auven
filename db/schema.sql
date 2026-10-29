@@ -6,3 +6,23 @@ CREATE INDEX IF NOT EXISTS events_workspace_time_idx ON events(workspace_id,crea
 CREATE INDEX IF NOT EXISTS events_agent_time_idx ON events(agent_id,created_at);
 CREATE TABLE IF NOT EXISTS proofs (id text PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces(id), agent_id text NOT NULL REFERENCES agents(id), kind text NOT NULL, payload text NOT NULL, signature text NOT NULL, public_key text NOT NULL, created_at text NOT NULL, tx_hash text, chain_status text, chain_signer text);
 CREATE INDEX IF NOT EXISTS proofs_workspace_time_idx ON proofs(workspace_id,created_at DESC);
+CREATE INDEX IF NOT EXISTS proofs_agent_idx ON proofs(agent_id);
+
+-- These tables are written by the AUVEN server, not the Supabase Data API.
+-- The owner connection used by the server can still access them; browser roles
+-- have no policies and, when present, no table privileges.
+ALTER TABLE workspaces ENABLE ROW LEVEL SECURITY;
+ALTER TABLE agents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE proofs ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+    REVOKE ALL ON TABLE workspaces, agents, events, proofs FROM anon;
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+    REVOKE ALL ON TABLE workspaces, agents, events, proofs FROM authenticated;
+  END IF;
+END
+$$;
