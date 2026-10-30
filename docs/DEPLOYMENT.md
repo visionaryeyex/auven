@@ -61,6 +61,8 @@ The current budget is an estimate based on `max_tokens`; it is not exact OpenAI 
 
 Use a **new dedicated backend signer wallet**, separate from the wallet you use to sign in to your profile. Add Robinhood Chain mainnet to the wallet: chain ID **4663**, currency **ETH**. Fund that address with a small amount of ETH on Robinhood Chain for gas. Put only its private key in Vercel as `AUVEN_RH_PRIVATE_KEY`. For a production RPC, set `AUVEN_RH_RPC_URL` to an endpoint from your infrastructure provider; the public Robinhood RPC is rate limited.
 
+The AUVEN registry was deployed at [`0xEAc2A9D6389ea558eF04191fC99b7AB94A90fc22`](https://robinhoodchain.blockscout.com/address/0xEAc2A9D6389ea558eF04191fC99b7AB94A90fc22) by publisher `0x3D47AcCc4D2d4C82ca75a6ae80A264665955Cbf4`. The [deployment transaction](https://robinhoodchain.blockscout.com/tx/0x55b020f047af499e5c46de1c17d7a41bc6a99ea3d06860fc465264e872148102) succeeded on chain 4663. Set this address as `AUVEN_RH_REGISTRY_ADDRESS`. The Vercel signer must be the same publisher, because the registry rejects any other caller.
+
 Publishing a proof is an actual mainnet transaction and costs gas. With no `AUVEN_RH_REGISTRY_ADDRESS`, AUVEN sends a zero-value transaction to its own signer address with `AUVEN1` and the proof commitment in calldata. To use the included proof registry:
 
 1. From a trusted machine, set `AUVEN_RH_PRIVATE_KEY` for the dedicated funded signer and `AUVEN_RH_RPC_URL` for a production RPC. Run `npm run contract:compile` and `npm run contract:deploy`. The deploy script refuses a chain other than 4663 and prints the contract address and deployment transaction.
