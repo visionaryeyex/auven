@@ -32,6 +32,21 @@ if (showcase) {
   if (location.hash) fromHash();
 }
 
+const copyToken = document.querySelector('[data-copy-token]');
+if (copyToken) {
+  let resetLabel;
+  copyToken.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(document.querySelector('#token-address').textContent.trim());
+      copyToken.textContent = 'Copied';
+    } catch {
+      copyToken.textContent = 'Select address to copy';
+    }
+    clearTimeout(resetLabel);
+    resetLabel = setTimeout(() => { copyToken.textContent = 'Copy address'; }, 2500);
+  });
+}
+
 document.addEventListener('click', (event) => {
   document.querySelectorAll('.mobile-nav[open]').forEach((menu) => {
     if (!menu.contains(event.target)) menu.open = false;
