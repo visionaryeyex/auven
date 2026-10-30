@@ -198,16 +198,55 @@ dialog form { padding: 34px; }
 dialog label { font-size: 13px; margin-top: 22px; }
 dialog input,dialog textarea { padding: 12px; border-radius: 8px; }
 
-.access-gated .app-tabs,.access-gated .header-right { display: none; }
-.access-gated .app-body { min-height: calc(100vh - 72px); display: block; background: radial-gradient(circle at 50% 2%,#f5f2ff 0%,#fff 43%); }
-#app.access-gated .content { max-width: 640px; padding-top: clamp(64px,10vh,120px); }
-#app.access-gated .page-top { border: 0; margin-bottom: 32px; padding: 0; }
-#app.access-gated .page-top h1 { font-size: clamp(36px,4vw,48px); line-height: 1.07; letter-spacing: -.065em; }
-#app.access-gated .page-top p { font-size: 16px; line-height: 1.6; margin-top: 13px; }
-#app.access-gated .panel { max-width: none!important; padding: 36px!important; border-radius: 18px; box-shadow: 0 25px 70px #39295812; }
-#app.access-gated .panel label { font-weight: 650; }
-#app.access-gated .panel input { font-family: inherit; min-height: 46px; }
-#app.access-gated .panel .button { min-height: 45px; }
+.access-gated .header-right { display: none; }
+.access-gated .app-body { min-height: calc(100vh - 133px); background: #fff; }
+#app.access-gated .content { max-width: 1320px; padding-top: 50px; }
+#app.access-gated .page-top { border-bottom: 1px solid var(--app-line); margin-bottom: 34px; padding-bottom: 30px; }
+#app.access-gated .page-top h1 { font-size: 33px; line-height: 1.1; }
+#app.access-gated .page-top p { font-size: 15px; line-height: 1.6; margin-top: 7px; }
+.guide-state { align-self: center; border: 1px solid #e6dfff; border-radius: 6px; background: #f5f2ff; color: #7057e8; padding: 8px 11px; font-size: 10px; font-weight: 800; letter-spacing: .09em; white-space: nowrap; }
+.guide-grid { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(330px,.85fr); gap: 24px; align-items: start; }
+.guide-story { min-height: 520px; border: 1px solid #e7e1ee; border-radius: 18px; padding: clamp(35px,4vw,60px); background: radial-gradient(circle at 84% 18%,#eee9ff 0,transparent 32%),linear-gradient(145deg,#faf9ff,#fff 66%); overflow: hidden; position: relative; }
+.guide-story::after { content: ''; position: absolute; width: 250px; height: 250px; border: 1px solid #d7cdf7; border-radius: 50%; right: -100px; bottom: -145px; box-shadow: 0 0 0 45px #7057e808,0 0 0 90px #7057e806; pointer-events: none; }
+.guide-kicker,.guide-auth-head>span,.soon-plan>span { color: #7057e8; font-size: 11px; font-weight: 800; letter-spacing: .13em; }
+.guide-story h2,.soon-page h2 { max-width: 570px; margin: 23px 0 17px; font-size: clamp(34px,3.2vw,48px); line-height: 1.1; font-weight: 730; letter-spacing: -.055em; }
+.guide-story>p,.soon-page p { max-width: 540px; color: #746d7c; font-size: 16px; line-height: 1.7; }
+.guide-steps { margin-top: 43px; max-width: 540px; border-top: 1px solid #e8e2ef; }
+.guide-steps>div { display: flex; align-items: center; gap: 17px; padding: 18px 0; border-bottom: 1px solid #eae5f1; }
+.guide-steps b,.soon-plan b { width: 28px; height: 28px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 7px; background: #eee9ff; color: #7057e8; font-size: 11px; }
+.guide-steps strong,.guide-steps small { display: block; }
+.guide-steps strong { font-size: 14px; letter-spacing: -.02em; }
+.guide-steps small { color: #8e8795; font-size: 12px; margin-top: 4px; }
+#app .guide-auth { padding: 38px; border-radius: 18px; box-shadow: 0 22px 60px #3929580d; }
+.guide-auth-head h2 { margin: 13px 0 9px; font-size: 25px; line-height: 1.18; letter-spacing: -.045em; }
+.guide-auth-head p { margin: 0 0 26px; color: #766f7d; font-size: 13px; line-height: 1.65; }
+.guide-auth label { font-weight: 650; }
+.guide-auth input { min-height: 46px; font-family: inherit; }
+.guide-auth .button { min-height: 45px; margin-top: 18px; }
+.guide-auth form[hidden] { display: none; }
+.guide-auth .subtle { color: #807987; font-size: 12px; line-height: 1.6; }
+.guide-divider { display: flex; align-items: center; gap: 13px; margin: 27px 0 8px; color: #a19aa8; font-size: 10px; font-weight: 800; letter-spacing: .1em; }
+.guide-divider::before,.guide-divider::after { content: ''; flex: 1; height: 1px; background: #e8e3ed; }
+.guide-signout { margin-top: 18px; border: 0; background: none; color: #7057e8; padding: 0; font-size: 13px; font-weight: 700; }
+.soon-page { min-height: 520px; display: grid; grid-template-columns: minmax(0,1.15fr) minmax(280px,.75fr); gap: 45px; align-items: center; padding: clamp(40px,5vw,75px); border: 1px solid #e7e1ee; border-radius: 19px; background: radial-gradient(circle at 84% 30%,#eee9ff 0,transparent 34%),linear-gradient(145deg,#faf9ff,#fff 65%); }
+.soon-page .button { margin-top: 20px; }
+.soon-plan { background: #fff; border: 1px solid #e8e2ee; border-radius: 14px; padding: 28px; box-shadow: 0 20px 60px #31204c0c; }
+.soon-plan>div { display: flex; align-items: center; gap: 14px; padding: 18px 0; border-bottom: 1px solid #eee9f2; }
+.soon-plan>div:last-child { border-bottom: 0; padding-bottom: 0; }
+.soon-plan strong { font-size: 14px; font-weight: 650; }
+.section-primer { display: grid; grid-template-columns: minmax(0,1fr) minmax(280px,.8fr); gap: 40px; align-items: center; padding: clamp(35px,4vw,55px); border: 1px solid #e8e3ee; border-radius: 17px; background: linear-gradient(125deg,#fbfaff,#fff 67%); }
+.section-primer-intro h2 { margin: 19px 0 12px; font-size: clamp(28px,2.5vw,38px); line-height: 1.14; letter-spacing: -.05em; }
+.section-primer-intro p { max-width: 510px; color: #777180; font-size: 15px; line-height: 1.7; }
+.section-primer-intro .button { margin-top: 22px; }
+.primer-items { border: 1px solid #ebe6f0; border-radius: 12px; padding: 8px 24px; background: #fff; box-shadow: 0 16px 40px #3524490a; }
+.primer-items>div { display: flex; align-items: center; gap: 15px; padding: 18px 0; border-bottom: 1px solid #eeeaf2; }
+.primer-items>div:last-child { border-bottom: 0; }
+.primer-items b { flex: 0 0 auto; color: #7057e8; font-size: 11px; }
+.primer-items strong,.primer-items small { display: block; }
+.primer-items strong { font-size: 14px; }
+.primer-items small { font-size: 12px; color: #918a98; margin-top: 4px; }
+.policy-table { margin-top: 24px; }
+.policy-table .panel-head>span { color: #928b99; font-size: 12px; }
 
 @media (max-width:800px) {
   .app-header { padding: 0 22px; }
@@ -218,6 +257,8 @@ dialog input,dialog textarea { padding: 12px; border-radius: 8px; }
   .onboarding { grid-template-columns: 1fr; }
   .onboarding-rail { display: none; }
   .onboarding-main { padding: 55px 40px; }
+  .guide-grid,.soon-page,.section-primer { grid-template-columns: 1fr; }
+  .guide-story { min-height: 0; }
 }
 @media (max-width:480px) {
   .app-header .brand span,.app-divider,.preview-badge { display: none; }
@@ -229,6 +270,10 @@ dialog input,dialog textarea { padding: 12px; border-radius: 8px; }
   .onboarding-main>p { font-size: 15px; }
   .onboarding-actions .button { width: 100%; }
   dialog form { padding: 26px; }
-  #app.access-gated .content { padding: 60px 22px 80px; }
-  #app.access-gated .panel { padding: 24px!important; }
+  #app.access-gated .content { padding: 38px 22px 80px; }
+  #app.access-gated .page-top { align-items: flex-start; gap: 16px; }
+  .guide-state { align-self: flex-start; }
+  .guide-story,.soon-page,.section-primer { padding: 30px 24px; }
+  .guide-story h2,.soon-page h2 { font-size: 34px; }
+  #app .guide-auth { padding: 27px; }
 }
