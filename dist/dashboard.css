@@ -31,7 +31,9 @@
 .workspace-icon { background: #f0ecff; color: var(--app-violet); }
 .header-right { gap: 12px; }
 .preview-badge { background: #f3f0ff; color: #6750d3; padding: 6px 10px; font-size: 11px; }
-.avatar { background: var(--app-ink); color: #fff; border-radius: 50%; width: 30px; height: 30px; }
+.avatar { background: var(--app-ink); color: #fff; border: 0; border-radius: 50%; width: 30px; height: 30px; display: grid; place-items: center; transition: background .2s, transform .2s; }
+.avatar:hover { background: var(--app-violet); transform: translateY(-1px); }
+.avatar:focus-visible { outline: 3px solid #a997fa; outline-offset: 3px; }
 
 .app-tabs {
   min-height: 56px;
@@ -121,7 +123,7 @@
 }
 
 /* Workspace typography and spatial system */
-#app { font-family: Inter, "Aptos", Arial, sans-serif; background: #fff; }
+#app { font-family: "Geist", Arial, sans-serif; background: #fff; }
 .app-header { height: 72px; min-height: 72px; padding: 0 42px; }
 .app-header .brand { font-size: 17px; letter-spacing: .055em; }
 .app-header .brandmark { width: 30px; height: 30px; }
@@ -196,6 +198,17 @@ dialog form { padding: 34px; }
 dialog label { font-size: 13px; margin-top: 22px; }
 dialog input,dialog textarea { padding: 12px; border-radius: 8px; }
 
+.access-gated .app-tabs,.access-gated .header-right { display: none; }
+.access-gated .app-body { min-height: calc(100vh - 72px); display: block; background: radial-gradient(circle at 50% 2%,#f5f2ff 0%,#fff 43%); }
+#app.access-gated .content { max-width: 640px; padding-top: clamp(64px,10vh,120px); }
+#app.access-gated .page-top { border: 0; margin-bottom: 32px; padding: 0; }
+#app.access-gated .page-top h1 { font-size: clamp(36px,4vw,48px); line-height: 1.07; letter-spacing: -.065em; }
+#app.access-gated .page-top p { font-size: 16px; line-height: 1.6; margin-top: 13px; }
+#app.access-gated .panel { max-width: none!important; padding: 36px!important; border-radius: 18px; box-shadow: 0 25px 70px #39295812; }
+#app.access-gated .panel label { font-weight: 650; }
+#app.access-gated .panel input { font-family: inherit; min-height: 46px; }
+#app.access-gated .panel .button { min-height: 45px; }
+
 @media (max-width:800px) {
   .app-header { padding: 0 22px; }
   .app-tabs { padding: 0 22px; gap: 25px; }
@@ -216,4 +229,6 @@ dialog input,dialog textarea { padding: 12px; border-radius: 8px; }
   .onboarding-main>p { font-size: 15px; }
   .onboarding-actions .button { width: 100%; }
   dialog form { padding: 26px; }
+  #app.access-gated .content { padding: 60px 22px 80px; }
+  #app.access-gated .panel { padding: 24px!important; }
 }
