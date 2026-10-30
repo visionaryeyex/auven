@@ -42,7 +42,7 @@ The production project is **auven-wxk9**. Set variables for **Production**, then
 | `AUVEN_SETUP_TOKEN` | Legacy workspace bootstrap by admin token | 32 random bytes; already configured in the current Vercel project |
 | `AUVEN_PQ_SIGNING_SEED` | Stable ML-DSA-65 signing identity | 32 random bytes encoded as 64 hex characters; already configured |
 | `AUVEN_OPENAI_API_KEY` | Controlled OpenAI chat requests | OpenAI Platform project API key |
-| `AUVEN_MODEL` | Optional model override | Defaults to `gpt-4o-mini` in code |
+| `AUVEN_MODEL` | Optional model override | Defaults to `gpt-6.1-sol` in code |
 | `AUVEN_RH_PRIVATE_KEY` | Mainnet proof publication | Dedicated AUVEN backend wallet, funded with ETH on Robinhood Chain |
 | `AUVEN_RH_RPC_URL` | Optional production RPC | Robinhood Chain RPC provider endpoint; code has a public fallback |
 | `AUVEN_RH_REGISTRY_ADDRESS` | Optional registry mode | Deployed and verified `AuvenProofRegistry` address on chain 4663 |

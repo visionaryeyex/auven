@@ -111,7 +111,7 @@ The first command checks the signature and digest. The second also checks inclus
 | `AUVEN_SETUP_TOKEN` | Legacy admin-token workspace bootstrap |
 | `AUVEN_PQ_SIGNING_SEED` | Stable signing identity: 32 random bytes encoded as 64 hex characters |
 | `AUVEN_OPENAI_API_KEY` | Enables the supported OpenAI gateway route |
-| `AUVEN_MODEL` | Optional model name; defaults to `gpt-4o-mini` |
+| `AUVEN_MODEL` | Optional model name; defaults to `gpt-6.1-sol` |
 | `AUVEN_RH_PRIVATE_KEY` | Dedicated funded signer for mainnet publication |
 | `AUVEN_RH_RPC_URL` | Optional Robinhood Chain RPC override |
 | `AUVEN_RH_REGISTRY_ADDRESS` | Optional deployed proof registry; required to use the contract route |
