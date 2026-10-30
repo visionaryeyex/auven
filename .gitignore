@@ -9,3 +9,4 @@ outputs/
 assets/*
 !assets/auven-x-banner.png
 BRAND.md
+/launch-film/
