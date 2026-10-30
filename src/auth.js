@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { PrivyProvider, usePrivy, useLogin, useLinkAccount, getIdentityToken } from '@privy-io/react-auth';
+import { PrivyProvider, usePrivy, useLogin, useLinkAccount, useIdentityToken } from '@privy-io/react-auth';
 import { defineChain } from 'viem';
 
 let config = { enabled: false, chainId: 4663 };
@@ -10,13 +10,14 @@ const sdkReady = new Promise(resolve => { finishSdkReady = resolve; });
 let lastIdentity = null;
 
 function Bridge() {
-  const { ready, authenticated, user, getAccessToken, logout } = usePrivy();
+  const { ready, authenticated, user, logout } = usePrivy();
+  const { identityToken } = useIdentityToken();
   const { login } = useLogin();
   const { linkEmail, linkWallet } = useLinkAccount({
     onSuccess: () => window.dispatchEvent(new Event('auven-auth-change'))
   });
-  bridge = { ready, authenticated, user, getAccessToken, logout, login, linkEmail, linkWallet };
-  const identity = ready ? `${authenticated}:${user?.id || ''}:${JSON.stringify(user?.linkedAccounts || [])}` : null;
+  bridge = { ready, authenticated, user, identityToken, logout, login, linkEmail, linkWallet };
+  const identity = ready ? `${authenticated}:${user?.id || ''}:${Boolean(identityToken)}:${JSON.stringify(user?.linkedAccounts || [])}` : null;
   useEffect(() => {
     if (!ready) return;
     finishSdkReady();
@@ -67,13 +68,7 @@ const ready = (async () => {
 async function accessToken() {
   await ready;
   if (!bridge?.authenticated) return null;
-  await bridge.getAccessToken();
-  let token = await getIdentityToken();
-  if (!token) {
-    await new Promise(resolve => setTimeout(resolve, 250));
-    token = await getIdentityToken();
-  }
-  return token;
+  return bridge.identityToken || null;
 }
 
 function assertBridge() {

@@ -1,5 +1,6 @@
 const site=document.querySelector('#site'),app=document.querySelector('#app'),content=document.querySelector('#content'),dialog=document.querySelector('#agent-dialog');let token=sessionStorage.getItem('auven-admin-token')||'',current='overview',hasAccess=false,authLoading;const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function ensureAuth(){if(window.auvenAuth)return Promise.resolve();if(!authLoading)authLoading=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='auth.js';script.onload=resolve;script.onerror=()=>reject(Error('Authentication could not load.'));document.body.append(script)});return authLoading}
+async function waitFor(promise,ms,message){let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error(message)),ms)})])}finally{clearTimeout(timer)}}
 async function api(path,options={}){await ensureAuth();const jwt=await window.auvenAuth.accessToken();const bearer=jwt||token;const r=await fetch('/api'+path,{...options,headers:{'content-type':'application/json',...(bearer?{authorization:'Bearer '+bearer}:{}),...options.headers}});let data=await r.json();if(!r.ok)throw Error(data.error||'request_failed');return data}
 function openApp(page='overview'){site.hidden=true;app.hidden=false;content.innerHTML='<div class="page-top"><h1>Opening workspace</h1></div>';window.scrollTo({top:0,behavior:'instant'});render(page)}function home(e){e.preventDefault();app.hidden=true;site.hidden=false;window.scrollTo({top:0,behavior:'instant'})}document.querySelectorAll('[data-app]').forEach(b=>b.onclick=()=>openApp(b.dataset.openPage||'overview'));document.querySelectorAll('[data-home]').forEach(b=>b.onclick=home);document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{window.scrollTo({top:0,behavior:'instant'});render(b.dataset.page)});document.querySelectorAll('.close').forEach(b=>b.onclick=()=>dialog.close());
 const filters={activity:'all',proofs:'all'};
@@ -19,7 +20,7 @@ function syncContext(page){
   document.querySelectorAll('.app-tabs [data-page]').forEach(button=>button.setAttribute('aria-current',button.dataset.page===page?'page':'false'));
 }
 const button='<button class="button dark" data-create>+ Connect agent</button>';const empty=(title,copy)=>`<div class="empty"><div class="empty-icon">◈</div><h3>${title}</h3><p>${copy}</p></div>`;
-function showError(error){content.innerHTML=`<section class="panel" style="padding:24px;max-width:560px"><h2>Workspace unavailable</h2><p class="subtle">${esc(error.message||error)}</p><button class="button outline" id="retry">Try again</button></section>`;content.querySelector('#retry').onclick=()=>render(current)}
+function showError(error){const detail=String(error.message||error);const message=/too many requests|\b429\b/i.test(detail)?'Sign-in is temporarily rate limited. Wait a minute, then try again.':detail;content.innerHTML=`<section class="panel" style="padding:24px;max-width:560px"><h2>Workspace unavailable</h2><p class="subtle">${esc(message)}</p><button class="button outline" id="retry">Try again</button></section>`;content.querySelector('#retry').onclick=()=>render(current)}
 const sectionGuides={
   overview:{title:'Overview',summary:'Your agents, gateway decisions, and proofs in one place.',headline:'Start with a workspace you control.',description:'AUVEN brings identity, policy checks, and signed activity into one view. Access to your workspace requires a verified account or its admin credential.',steps:[['Create a workspace','Keep your agents and evidence together.'],['Connect an agent','Register an agent running in your application.'],['Review activity','See what the gateway allowed or denied.']]},
   agents:{title:'Agents',summary:'Connect and manage agents running in your own applications.',headline:'Know which agent is acting.',description:'Register an existing agent to issue a gateway credential and signed passport. Creating an agent inside AUVEN is a separate upcoming feature.',steps:[['Register identity','Give the agent a name and purpose.'],['Set a daily limit','Choose the budget for supported requests.'],['Connect your code','Use the credential from your server.']]},
@@ -47,7 +48,7 @@ function sectionPrimer(kicker,title,copy,items,action=''){
 function renderAccess(page){
   if(window.auvenAuth.enabled()){
     if(window.auvenAuth.signedIn()){
-      renderGuide(page,`<div class="guide-auth-head"><span>ACCOUNT SETUP</span><h2>Sign-in needs one more setting</h2><p>Your Privy session is active, but AUVEN has not received an identity token. Ask the site operator to enable “Return user data in an identity token” in Privy Dashboard → User management → Authentication → Advanced.</p></div><button class="button outline" type="button" id="auth-retry">Try again</button><button class="button outline" type="button" id="auth-signout">Sign out</button>`,'account');
+      renderGuide(page,`<div class="guide-auth-head"><span>ACCOUNT SETUP</span><h2>Finishing sign-in</h2><p>Your Privy session is active, but the identity token is not available yet. Try again shortly. If this continues, the site operator should check “Return user data in an identity token” in Privy Dashboard → User management → Authentication → Advanced.</p></div><button class="button outline" type="button" id="auth-retry">Try again</button><button class="button outline" type="button" id="auth-signout">Sign out</button>`,'account');
       content.querySelector('#auth-retry').onclick=()=>render(page);
       content.querySelector('#auth-signout').onclick=async()=>{await window.auvenAuth.signOut();render(page)};
       return;
@@ -70,9 +71,12 @@ function renderWorkspaceSetup(page){
 }
 async function render(page){
   current=page;
-  try{await ensureAuth()}catch(error){showError(error);return}
-  await window.auvenAuth.ready;
-  const jwt=await window.auvenAuth.accessToken();
+  let jwt;
+  try{
+    await waitFor(ensureAuth(),15000,'Authentication could not load. Please try again.');
+    await waitFor(window.auvenAuth.ready,15000,'Authentication took too long to start. Please try again.');
+    jwt=await waitFor(window.auvenAuth.accessToken(),15000,'Your session took too long to open. Please try again.');
+  }catch(error){showError(error);return}
   hasAccess=Boolean(jwt||token);
   app.classList.toggle('access-gated',!hasAccess);
   if(!hasAccess)document.querySelector('.app-workspace-name').textContent='Workspace';
