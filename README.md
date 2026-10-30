@@ -8,6 +8,7 @@
   <a href="#hosted-setup"><img src="https://img.shields.io/badge/Privy-authentication-7057E8?style=flat-square" alt="Privy"></a>
   <a href="#proofs"><img src="https://img.shields.io/badge/ML--DSA--65-post--quantum-7057E8?style=flat-square" alt="ML-DSA-65"></a>
   <a href="#proofs"><img src="https://img.shields.io/badge/Robinhood%20Chain-4663-24202F?style=flat-square" alt="Robinhood Chain 4663"></a>
+  <a href="#auven-token"><img src="https://img.shields.io/badge/%24AUVEN-ERC--20-7057E8?style=flat-square" alt="$AUVEN ERC-20"></a>
   <a href="#hosted-setup"><img src="https://img.shields.io/badge/Vercel-deployed-000000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel"></a>
 </p>
 
@@ -22,9 +23,15 @@ The gateway controls traffic sent through it. An agent that calls a provider dir
 - **Agent identity.** Register an external agent in a workspace and issue a credential. The agent's passport is signed when it is registered.
 - **Request control.** Stop or resume an agent, reserve against its daily limit, reject duplicate request IDs, and record allowed and denied calls. The supported provider route is OpenAI chat completions when a server key is configured.
 - **Verifiable records.** Sign activity checkpoints with ML-DSA-65, export proofs, and reject changed payloads or signatures with the standalone verifier.
-- **Mainnet commitment.** Submit the hash of a signed proof on Robinhood Chain mainnet, then check the receipt, signer, target, and commitment. A small registry contract is included; publication uses it after deployment and configuration. Until then, the existing signer transaction mode remains available.
+- **Mainnet commitment.** Submit the hash of a signed proof on Robinhood Chain mainnet, then check the receipt, signer, target, and commitment. The included [proof registry](https://robinhoodchain.blockscout.com/address/0xEAc2A9D6389ea558eF04191fC99b7AB94A90fc22) is deployed on chain 4663.
 
 AUVEN registers and controls agents you already run; it does not host or create their runtime. Spending is estimated from the requested token limit and is not a provider invoice.
+
+## $AUVEN token
+
+[$AUVEN](https://robinhoodchain.blockscout.com/address/0x6e6e172ad5d06f6ca79f9c9b355fd8cdc2afb64d) is an ERC-20 token on Robinhood Chain mainnet (chain ID 4663). Contract: `0x6e6e172ad5d06f6ca79f9c9b355fd8cdc2afb64d`.
+
+The token contract is separate from this repository. The current AUVEN application does not require the token for sign-in, agent registration, gateway requests, or proof publication. Token-based payments and holder benefits are not implemented.
 
 ## Run locally
 
@@ -100,8 +107,8 @@ The first command checks the signature and digest. The second also checks inclus
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection string; use Supabase's transaction pooler on port 6543 for Vercel |
 | `AUVEN_PRIVY_APP_ID` | Privy app ID for email and wallet sign-in |
-| `AUVEN_PRIVY_APP_SECRET` | Server-only secret for verifying Privy identity tokens |
-| `AUVEN_SETUP_TOKEN` | Required header value for hosted workspace creation |
+| `AUVEN_PRIVY_APP_SECRET` | Server-only secret for verifying Privy tokens and looking up linked accounts |
+| `AUVEN_SETUP_TOKEN` | Legacy admin-token workspace bootstrap |
 | `AUVEN_PQ_SIGNING_SEED` | Stable signing identity: 32 random bytes encoded as 64 hex characters |
 | `AUVEN_OPENAI_API_KEY` | Enables the supported OpenAI gateway route |
 | `AUVEN_MODEL` | Optional model name; defaults to `gpt-4o-mini` |
@@ -111,11 +118,9 @@ The first command checks the signature and digest. The second also checks inclus
 
 Configure sensitive values as server-side Vercel secrets and redeploy after changing them. The Privy app ID is public; its app secret stays on the server. Back up the PQ seed: changing it creates a different signing identity. See [SECURITY.md](SECURITY.md).
 
-Privy needs email and wallet login enabled, the app origins configured, and identity tokens enabled. Email sign-in uses an OTP code. Supabase remains the PostgreSQL database. See [Deployment guide](docs/DEPLOYMENT.md) and [User guide](docs/USER_GUIDE.md) for the exact steps.
+Privy needs email and wallet login enabled and the app origins configured. Email sign-in uses an OTP code. The server accepts verified identity or access tokens. Supabase remains the PostgreSQL database. See [Deployment guide](docs/DEPLOYMENT.md) and [User guide](docs/USER_GUIDE.md) for the exact steps.
 
 For request examples and error handling in an existing agent application, see the [Agent integration guide](docs/AGENT_INTEGRATION.md).
-
-The email and wallet profile flow is implemented in this repository but needs live verification after Auth and the database are configured on the hosted deployment. The registry is compiled and deployable, but no live contract address is claimed here.
 
 ## Code
 

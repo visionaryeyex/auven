@@ -17,7 +17,7 @@ The browser does not receive the database URI. AUVEN's server connects to Postgr
 
 Create an AUVEN application in the [Privy Dashboard](https://dashboard.privy.io/). In **User management → Authentication**, enable **Email** and **Wallet** login. In **Advanced**, enable **Return user data in an identity token** when available. AUVEN uses the signed identity token when Privy provides it; otherwise the server verifies the Privy access token and retrieves the user's linked accounts from Privy. Add the production domain and local development origin to the app's allowed origins. Set the app's name and purple appearance in Privy.
 
-In **Configuration → App settings → Basics**, copy the app ID and generate a read-only server app secret. AUVEN uses it to verify identity tokens and does not use Privy wallet-management APIs. Add both to Vercel Production:
+In **Configuration → App settings → Basics**, copy the app ID and generate a read-only server app secret. AUVEN uses it to verify Privy tokens and retrieve linked accounts; it does not use Privy wallet-management APIs. Add both to Vercel Production:
 
 | Name | Value | Visibility |
 | --- | --- | --- |
@@ -26,7 +26,7 @@ In **Configuration → App settings → Basics**, copy the app ID and generate a
 
 Privy sends an **email code**, not a Magic Link. The app presents Privy's email and EVM wallet login modal. The default and supported EVM network is Robinhood Chain mainnet (chain ID **4663**). A wallet can still decline a network switch during connection; check its network before any onchain transaction. Wallet login itself is an offchain signature and does not spend gas.
 
-In **Profile**, link an email to a wallet-first profile or link an EVM wallet to an email-first profile using Privy's account linking. Do this while signed in so both methods resolve to the same Privy user ID and AUVEN workspace. The backend never trusts a wallet address supplied by the browser; it reads linked accounts from the verified Privy identity token.
+In **Profile**, link an email to a wallet-first profile or link an EVM wallet to an email-first profile using Privy's account linking. Do this while signed in so both methods resolve to the same Privy user ID and AUVEN workspace. The backend never trusts a wallet address supplied by the browser; it reads linked accounts from a verified identity token or retrieves them from Privy after verifying an access token.
 
 The existing Supabase project remains the PostgreSQL database. Supabase Auth email, Web3, redirect URL, SMTP, URL and publishable-key settings are no longer used by AUVEN.
 
