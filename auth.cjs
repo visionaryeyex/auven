@@ -1,47 +1,43 @@
-const SUPABASE_URL = process.env.AUVEN_SUPABASE_URL?.replace(/\/$/, '');
-const PUBLISHABLE_KEY = process.env.AUVEN_SUPABASE_PUBLISHABLE_KEY;
+const APP_ID = process.env.AUVEN_PRIVY_APP_ID;
+const APP_SECRET = process.env.AUVEN_PRIVY_APP_SECRET;
 const CHAIN_ID = 4663;
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
+let clientPromise;
 
-function configured() {
-  return Boolean(SUPABASE_URL && PUBLISHABLE_KEY);
-}
+function configured() { return Boolean(APP_ID && APP_SECRET); }
 
 function publicConfig() {
   return configured()
-    ? { enabled: true, url: SUPABASE_URL, publishableKey: PUBLISHABLE_KEY, chainId: CHAIN_ID }
+    ? { enabled: true, appId: APP_ID, chainId: CHAIN_ID }
     : { enabled: false, chainId: CHAIN_ID };
 }
 
-function walletIdentity(user) {
-  const identity = user?.identities?.find(item =>
-    item.provider === 'web3' &&
-    item.identity_data?.chain === 'ethereum' &&
-    String(item.identity_data?.network) === String(CHAIN_ID) &&
-    ADDRESS.test(item.identity_data?.address || '')
+function identities(user) {
+  const linked = user?.linkedAccounts || user?.linked_accounts || [];
+  const email = linked.find(item => item.type === 'email' && typeof item.address === 'string')?.address || null;
+  const wallets = [...new Set(linked.filter(item => item.type === 'wallet' &&
+    (item.chainType || item.chain_type) === 'ethereum' && ADDRESS.test(item.address || '')
+  ).map(item => item.address.toLowerCase()))];
+  return { email, wallets };
+}
+
+async function client() {
+  if (!clientPromise) clientPromise = import('@privy-io/node').then(({ PrivyClient }) =>
+    new PrivyClient({ appId: APP_ID, appSecret: APP_SECRET })
   );
-  return identity ? identity.identity_data.address.toLowerCase() : null;
+  return clientPromise;
 }
 
 async function userFromToken(token) {
   if (!configured() || !token || token.split('.').length !== 3) return null;
   try {
-    const response = await fetch(SUPABASE_URL + '/auth/v1/user', {
-      headers: { apikey: PUBLISHABLE_KEY, authorization: 'Bearer ' + token },
-      signal: AbortSignal.timeout(8000)
-    });
-    if (!response.ok) return null;
-    const user = await response.json();
-    if (!/^[0-9a-f-]{36}$/i.test(user.id || '')) return null;
-    const email = user.email_confirmed_at ? user.email : null;
-    const wallet = walletIdentity(user);
-    if (!email && !wallet) return null;
-    return {
-      id: user.id,
-      email,
-      wallet
-    };
+    // users().get verifies the signed Privy identity token before returning linked accounts.
+    const user = await (await client()).users().get({ id_token: token });
+    if (!/^did:privy:[a-zA-Z0-9]+$/.test(user?.id || '')) return null;
+    const { email, wallets } = identities(user);
+    if (!email && !wallets.length) return null;
+    return { id: user.id, email, wallets };
   } catch { return null; }
 }
 
-module.exports = { configured, publicConfig, userFromToken, walletIdentity };
+module.exports = { configured, publicConfig, userFromToken, identities };

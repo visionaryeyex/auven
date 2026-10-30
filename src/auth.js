@@ -1,7 +1,32 @@
-import { createClient } from '@supabase/supabase-js';
+import React, { useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
+import { PrivyProvider, usePrivy, useLogin, useLinkAccount, getIdentityToken } from '@privy-io/react-auth';
+import { defineChain } from 'viem';
 
-let client = null;
 let config = { enabled: false, chainId: 4663 };
+let bridge = null;
+let finishSdkReady;
+const sdkReady = new Promise(resolve => { finishSdkReady = resolve; });
+let lastIdentity = null;
+
+function Bridge() {
+  const { ready, authenticated, user, getAccessToken, logout } = usePrivy();
+  const { login } = useLogin();
+  const { linkEmail, linkWallet } = useLinkAccount({
+    onSuccess: () => window.dispatchEvent(new Event('auven-auth-change'))
+  });
+  bridge = { ready, authenticated, user, getAccessToken, logout, login, linkEmail, linkWallet };
+  const identity = ready ? `${authenticated}:${user?.id || ''}:${JSON.stringify(user?.linkedAccounts || [])}` : null;
+  useEffect(() => {
+    if (!ready) return;
+    finishSdkReady();
+    if (identity !== lastIdentity) {
+      lastIdentity = identity;
+      window.dispatchEvent(new Event('auven-auth-change'));
+    }
+  }, [ready, identity]);
+  return null;
+}
 
 const ready = (async () => {
   try {
@@ -9,98 +34,61 @@ const ready = (async () => {
     if (!response.ok) return;
     config = await response.json();
     if (!config.enabled) return;
-    client = createClient(config.url, config.publishableKey, {
-      auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
+    const chain = defineChain({
+      id: config.chainId,
+      name: 'Robinhood Chain',
+      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+      rpcUrls: { default: { http: ['https://rpc.mainnet.chain.robinhood.com'] } },
+      blockExplorers: { default: { name: 'Robinhood Chain Explorer', url: 'https://robinhoodchain.blockscout.com' } }
     });
-    client.auth.onAuthStateChange(() => window.dispatchEvent(new Event('auven-auth-change')));
-    await client.auth.getSession();
-  } catch (error) { console.error('AUVEN authentication could not start', error); }
+    const root = document.createElement('div');
+    root.id = 'privy-root';
+    document.body.append(root);
+    createRoot(root).render(React.createElement(PrivyProvider, {
+      appId: config.appId,
+      config: {
+        loginMethods: ['email', 'wallet'],
+        appearance: { theme: 'light', accentColor: '#7457ef' },
+        defaultChain: chain,
+        supportedChains: [chain],
+        embeddedWallets: { ethereum: { createOnLogin: 'off' } }
+      }
+    }, React.createElement(Bridge)));
+    await Promise.race([
+      sdkReady,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Privy did not become ready')), 12000))
+    ]);
+  } catch (error) {
+    config.enabled = false;
+    console.error('AUVEN authentication could not start', error);
+  }
 })();
 
-async function session() {
+async function accessToken() {
   await ready;
-  return client ? (await client.auth.getSession()).data.session : null;
-}
-
-async function accessToken() { return (await session())?.access_token || null; }
-
-function assertClient() {
-  if (!client) throw new Error('Email and wallet sign-in are not configured yet.');
-  return client;
-}
-
-async function emailLink(email) {
-  const { error } = await assertClient().auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.origin + '/?auven=auth' }
-  });
-  if (error) throw error;
-}
-
-async function ethereumWallet() {
-  const wallet = window.ethereum;
-  if (!wallet?.request) throw new Error('Install or open an EVM browser wallet to continue.');
-  const chainId = '0x' + config.chainId.toString(16);
-  const current = await wallet.request({ method: 'eth_chainId' });
-  if (current?.toLowerCase() !== chainId.toLowerCase()) {
-    try { await wallet.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] }); }
-    catch (error) {
-      if (error.code !== 4902) throw error;
-      await wallet.request({ method: 'wallet_addEthereumChain', params: [{
-        chainId,
-        chainName: 'Robinhood Chain',
-        nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-        rpcUrls: ['https://rpc.mainnet.chain.robinhood.com'],
-        blockExplorerUrls: ['https://robinhoodchain.blockscout.com']
-      }] });
-    }
+  if (!bridge?.authenticated) return null;
+  await bridge.getAccessToken();
+  let token = await getIdentityToken();
+  if (!token) {
+    await new Promise(resolve => setTimeout(resolve, 250));
+    token = await getIdentityToken();
   }
-  return wallet;
+  return token;
 }
 
-async function walletSignIn() {
-  const wallet = await ethereumWallet();
-  const { error } = await assertClient().auth.signInWithWeb3({
-    chain: 'ethereum', wallet,
-    statement: 'Sign in to AUVEN on Robinhood Chain.'
-  });
-  if (error) throw error;
+function assertBridge() {
+  if (!bridge?.ready) throw new Error('Privy sign-in is not configured yet.');
+  return bridge;
 }
 
-async function linkWallet() {
-  const wallet = await ethereumWallet();
-  const addresses = await wallet.request({ method: 'eth_requestAccounts' });
-  const address = addresses?.[0];
-  if (!address) throw new Error('No wallet address was selected.');
-  const jwt = await accessToken();
-  if (!jwt) throw new Error('Sign in before linking a wallet.');
-  const headers = { 'content-type': 'application/json', authorization: 'Bearer ' + jwt };
-  const challengeResponse = await fetch('/api/profile/wallet/challenge', {
-    method: 'POST', headers, body: JSON.stringify({ address })
-  });
-  const challenge = await challengeResponse.json();
-  if (!challengeResponse.ok) throw new Error(challenge.error || 'Could not create wallet challenge.');
-  const bytes = new TextEncoder().encode(challenge.message);
-  const hexMessage = '0x' + Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
-  const signature = await wallet.request({ method: 'personal_sign', params: [hexMessage, address] });
-  const linkResponse = await fetch('/api/profile/wallet/link', {
-    method: 'POST', headers, body: JSON.stringify({ nonce: challenge.nonce, signature })
-  });
-  const linked = await linkResponse.json();
-  if (!linkResponse.ok) throw new Error(linked.error || 'Could not link wallet.');
-  return linked;
-}
-
-async function addEmail(email) {
-  const { error } = await assertClient().auth.updateUser({ email });
-  if (error) throw error;
-}
-
-async function signOut() {
-  if (client) await client.auth.signOut();
-}
+async function emailLogin() { assertBridge().login({ loginMethods: ['email'] }); }
+async function walletSignIn() { assertBridge().login({ loginMethods: ['wallet'], walletChainType: 'ethereum-only' }); }
+async function linkWallet() { assertBridge().linkWallet(); }
+async function addEmail() { assertBridge().linkEmail(); }
+async function signOut() { if (bridge?.authenticated) await bridge.logout(); }
 
 window.auvenAuth = {
-  ready, enabled: () => Boolean(client), session, accessToken,
-  emailLink, walletSignIn, linkWallet, addEmail, signOut
+  ready, enabled: () => Boolean(config.enabled && bridge?.ready),
+  signedIn: () => Boolean(bridge?.authenticated), accessToken,
+  emailLogin, walletSignIn, linkWallet, addEmail, signOut
 };

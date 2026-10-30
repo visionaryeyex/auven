@@ -19,6 +19,13 @@ CREATE TABLE IF NOT EXISTS account_auth_users (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS account_auth_users_account_idx ON account_auth_users(account_id);
+CREATE TABLE IF NOT EXISTS account_privy_users (
+  privy_user_id text PRIMARY KEY,
+  account_id text NOT NULL REFERENCES accounts(id),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT account_privy_users_did CHECK (privy_user_id LIKE 'did:privy:%')
+);
+CREATE INDEX IF NOT EXISTS account_privy_users_account_idx ON account_privy_users(account_id);
 CREATE TABLE IF NOT EXISTS account_wallets (
   address text PRIMARY KEY,
   account_id text NOT NULL REFERENCES accounts(id),
@@ -47,16 +54,17 @@ ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE proofs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE account_auth_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE account_privy_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE account_wallets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wallet_link_challenges ENABLE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
-    REVOKE ALL ON TABLE workspaces, agents, events, proofs, accounts, account_auth_users, account_wallets, wallet_link_challenges FROM anon;
+    REVOKE ALL ON TABLE workspaces, agents, events, proofs, accounts, account_auth_users, account_privy_users, account_wallets, wallet_link_challenges FROM anon;
   END IF;
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
-    REVOKE ALL ON TABLE workspaces, agents, events, proofs, accounts, account_auth_users, account_wallets, wallet_link_challenges FROM authenticated;
+    REVOKE ALL ON TABLE workspaces, agents, events, proofs, accounts, account_auth_users, account_privy_users, account_wallets, wallet_link_challenges FROM authenticated;
   END IF;
 END
 $$;

@@ -4,16 +4,16 @@ AUVEN connects to agents that run in your application. It does not host an agent
 
 ## Sign in and set up a workspace
 
-If the deployment has Supabase Auth enabled, open **Explore dashboard** and choose one method:
+If the deployment has Privy enabled, open **Explore dashboard** and choose one method:
 
-- **Email:** enter your address, request a sign-in link, then open the link from the email. First verified sign-in creates your AUVEN profile.
-- **Wallet:** use an injected EVM browser wallet. AUVEN asks the wallet to switch to Robinhood Chain mainnet (chain ID 4663), then to sign a login message. Signing in is offchain and does not spend gas.
+- **Email:** enter your address in the Privy modal, then enter the one-time code from the email. First verified sign-in creates your AUVEN profile.
+- **Wallet:** connect an EVM wallet in the Privy modal and sign the login message. AUVEN sets Robinhood Chain mainnet (chain ID 4663) as its default network. Signing in is offchain and does not spend gas.
 
 Create a workspace when prompted. If you already have a workspace created with an admin token, select **Claim existing workspace** and enter that token. Save the admin token shown when a new workspace is created; it appears once. Email and wallet sessions can then access the workspace without pasting it again.
 
-In **Settings**, a wallet-first account can add an email and confirm it through Supabase Auth. An email-first account can select **Link wallet**. AUVEN creates a short-lived challenge; the wallet signs it, and AUVEN verifies the signature before associating the address with your profile. A wallet already linked to another profile cannot be linked again automatically.
+In **Profile**, a wallet-first account can link an email through Privy. An email-first account can select **Link wallet** and sign Privy's wallet challenge. Link the second method while signed in to keep one Privy profile and one AUVEN workspace. A wallet already linked to another Privy profile cannot be linked again automatically.
 
-If Supabase Auth has not been configured, the dashboard uses the legacy workspace admin token. The deployment operator may also require its setup token for new legacy workspaces.
+If Privy has not been configured, the dashboard uses the legacy workspace admin token. The deployment operator may also require its setup token for new legacy workspaces.
 
 ## Connect an external agent
 
@@ -41,7 +41,7 @@ Every request needs a unique idempotency key of 8–128 characters. A repeated k
 - **Policies** explains the current deterministic rule: registered active agent, sufficient daily budget, and an idempotency key.
 - **Activity** shows recorded gateway decisions and reasons.
 - **Proofs** shows signed passports and activity checkpoints. Export a proof as JSON. If the backend mainnet signer is configured and funded, **Publish** submits its commitment and **Verify** checks inclusion.
-- **Settings** manages sign-in methods and sign-out when Supabase Auth is configured.
+- **Profile** manages sign-in methods and sign-out when Privy is configured.
 
 An activity checkpoint can be created through `POST /api/checkpoints` with a workspace session or admin token and an `agent_id`. The UI then shows the resulting proof in **Proofs**.
 
@@ -61,8 +61,7 @@ The first command verifies the ML-DSA-65 signature and digest. The second also c
 | Message | Meaning |
 | --- | --- |
 | `database_not_configured` | The deployment is missing `DATABASE_URL`; contact the operator. |
-| `invalid_session` | Sign in again; the Supabase session may have expired. |
+| `invalid_session` | Sign in again; the Privy session may have expired or identity tokens may be disabled. |
 | `workspace_not_found` | Create a workspace or claim a legacy one. |
 | `provider_not_configured` | The operator has not set the OpenAI key. |
 | `mainnet_signer_not_configured` | Proof publication is not enabled. Export and verify the proof offchain meanwhile. |
-| `wallet_already_linked` | That wallet belongs to another AUVEN profile; automatic account merging is blocked. |

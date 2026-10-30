@@ -21,9 +21,13 @@
   "type": "commonjs",
   "dependencies": {
     "@noble/post-quantum": "^0.7.1",
-    "@supabase/supabase-js": "^2.118.0",
+    "@privy-io/node": "^0.37.0",
+    "@privy-io/react-auth": "^3.51.0",
     "ethers": "^6.17.0",
-    "pg": "^8.23.1"
+    "pg": "^8.23.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "viem": "^2.56.5"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",

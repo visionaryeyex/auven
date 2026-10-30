@@ -5,6 +5,7 @@
 <p align="center">
   <a href="#run-locally"><img src="https://img.shields.io/badge/Node.js-22-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js 22"></a>
   <a href="#hosted-setup"><img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL"></a>
+  <a href="#hosted-setup"><img src="https://img.shields.io/badge/Privy-authentication-7057E8?style=flat-square" alt="Privy"></a>
   <a href="#proofs"><img src="https://img.shields.io/badge/ML--DSA--65-post--quantum-7057E8?style=flat-square" alt="ML-DSA-65"></a>
   <a href="#proofs"><img src="https://img.shields.io/badge/Robinhood%20Chain-4663-24202F?style=flat-square" alt="Robinhood Chain 4663"></a>
   <a href="#hosted-setup"><img src="https://img.shields.io/badge/Vercel-deployed-000000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel"></a>
@@ -31,6 +32,7 @@ Use Node.js 22.x.
 
 ```bash
 npm ci
+npm run build
 npm test
 npm start
 ```
@@ -97,8 +99,8 @@ The first command checks the signature and digest. The second also checks inclus
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection string; use Supabase's transaction pooler on port 6543 for Vercel |
-| `AUVEN_SUPABASE_URL` | Supabase project URL for email and wallet sign-in |
-| `AUVEN_SUPABASE_PUBLISHABLE_KEY` | Public Supabase client key for Auth; never use a service role key here |
+| `AUVEN_PRIVY_APP_ID` | Privy app ID for email and wallet sign-in |
+| `AUVEN_PRIVY_APP_SECRET` | Server-only secret for verifying Privy identity tokens |
 | `AUVEN_SETUP_TOKEN` | Required header value for hosted workspace creation |
 | `AUVEN_PQ_SIGNING_SEED` | Stable signing identity: 32 random bytes encoded as 64 hex characters |
 | `AUVEN_OPENAI_API_KEY` | Enables the supported OpenAI gateway route |
@@ -107,9 +109,9 @@ The first command checks the signature and digest. The second also checks inclus
 | `AUVEN_RH_RPC_URL` | Optional Robinhood Chain RPC override |
 | `AUVEN_RH_REGISTRY_ADDRESS` | Optional deployed proof registry; required to use the contract route |
 
-Configure sensitive values as server-side Vercel secrets and redeploy after changing them. The Supabase URL and publishable key are public client configuration; never substitute a service role key. Back up the PQ seed: changing it creates a different signing identity. See [SECURITY.md](SECURITY.md).
+Configure sensitive values as server-side Vercel secrets and redeploy after changing them. The Privy app ID is public; its app secret stays on the server. Back up the PQ seed: changing it creates a different signing identity. See [SECURITY.md](SECURITY.md).
 
-Supabase Auth also needs email sign-in, Ethereum Web3 sign-in, the app's allowed redirect URLs, a Magic Link email template, and production SMTP configured in its dashboard. See [Deployment guide](docs/DEPLOYMENT.md) and [User guide](docs/USER_GUIDE.md) for the exact steps.
+Privy needs email and wallet login enabled, the app origins configured, and identity tokens enabled. Email sign-in uses an OTP code. Supabase remains the PostgreSQL database. See [Deployment guide](docs/DEPLOYMENT.md) and [User guide](docs/USER_GUIDE.md) for the exact steps.
 
 For request examples and error handling in an existing agent application, see the [Agent integration guide](docs/AGENT_INTEGRATION.md).
 
