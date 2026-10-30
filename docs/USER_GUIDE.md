@@ -6,7 +6,7 @@ AUVEN connects to agents that run in your application. It does not host an agent
 
 If the deployment has Supabase Auth enabled, open **Explore dashboard** and choose one method:
 
-- **Email:** enter your address, request a sign-in code, then enter the code from the email. First sign-in creates your AUVEN profile.
+- **Email:** enter your address, request a sign-in link, then open the link from the email. First verified sign-in creates your AUVEN profile.
 - **Wallet:** use an injected EVM browser wallet. AUVEN asks the wallet to switch to Robinhood Chain mainnet (chain ID 4663), then to sign a login message. Signing in is offchain and does not spend gas.
 
 Create a workspace when prompted. If you already have a workspace created with an admin token, select **Claim existing workspace** and enter that token. Save the admin token shown when a new workspace is created; it appears once. Email and wallet sessions can then access the workspace without pasting it again.

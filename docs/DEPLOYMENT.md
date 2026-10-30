@@ -26,7 +26,7 @@ The app serves these two public values through `/api/auth/config`. Do not use a 
 
 In **Supabase → Authentication**:
 
-1. Keep **Email** enabled and require email confirmation. AUVEN uses a one-time email code. Edit the Magic Link / OTP email template so it includes `{{ .Token }}`; otherwise Supabase sends a link instead of a code.
+1. Keep **Email** enabled and require email confirmation. AUVEN uses Supabase Magic Links. Keep the Magic Link email template set to send `{{ .ConfirmationURL }}` so the user can finish sign-in from the link.
 2. Enable the **Web3 Ethereum** provider. AUVEN switches an injected EVM wallet to Robinhood Chain mainnet (chain ID **4663**) before asking it to sign in. The signature is offchain; signing in does not spend gas.
 3. In **URL Configuration**, set the Site URL to the production URL actually in use. Add that exact URL and its paths to Redirect URLs; also add `http://127.0.0.1:4174/**` for local testing. Web3 sign-in checks that the message's domain and URI are allowed. Use the working Vercel domain until the custom domain resolves, then add the custom domain too.
 4. For public email registration, configure **custom SMTP** in Supabase Auth. The default mailer is restricted and is not suitable for production. Configure sender domain authentication (SPF, DKIM, and DMARC) with the email provider.
@@ -78,7 +78,7 @@ The ML-DSA signature is checked offchain by AUVEN's verifier; the contract recor
 
 1. `npm ci`, `npm run build`, and `npm test` pass.
 2. `/api/ready` returns 200 on the production Vercel URL.
-3. Email OTP arrives at a non-team address; a new user signs in and creates a workspace.
+3. A Magic Link arrives at a non-team address; a new user opens it, signs in, and creates a workspace.
 4. A browser EVM wallet signs in on chain 4663. From an email profile, linking that wallet requires its signature; later wallet sign-in opens the same workspace.
 5. Register an external agent, save its credential, stop and resume it, and confirm activity and signed passport appear.
 6. With an OpenAI key, send one small gateway request. Confirm duplicate idempotency keys and stopped agents are denied.

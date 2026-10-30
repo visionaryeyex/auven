@@ -109,7 +109,7 @@ The first command checks the signature and digest. The second also checks inclus
 
 Configure sensitive values as server-side Vercel secrets and redeploy after changing them. The Supabase URL and publishable key are public client configuration; never substitute a service role key. Back up the PQ seed: changing it creates a different signing identity. See [SECURITY.md](SECURITY.md).
 
-Supabase Auth also needs email sign-in, Ethereum Web3 sign-in, the app's allowed redirect URLs, an email OTP template, and production SMTP configured in its dashboard. See [Deployment guide](docs/DEPLOYMENT.md) and [User guide](docs/USER_GUIDE.md) for the exact steps.
+Supabase Auth also needs email sign-in, Ethereum Web3 sign-in, the app's allowed redirect URLs, a Magic Link email template, and production SMTP configured in its dashboard. See [Deployment guide](docs/DEPLOYMENT.md) and [User guide](docs/USER_GUIDE.md) for the exact steps.
 
 For request examples and error handling in an existing agent application, see the [Agent integration guide](docs/AGENT_INTEGRATION.md).
 

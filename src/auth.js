@@ -29,16 +29,11 @@ function assertClient() {
   return client;
 }
 
-async function emailCode(email) {
+async function emailLink(email) {
   const { error } = await assertClient().auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: window.location.origin + '/' }
+    options: { emailRedirectTo: window.location.origin + '/?auven=auth' }
   });
-  if (error) throw error;
-}
-
-async function verifyCode(email, code) {
-  const { error } = await assertClient().auth.verifyOtp({ email, token: code, type: 'email' });
   if (error) throw error;
 }
 
@@ -107,5 +102,5 @@ async function signOut() {
 
 window.auvenAuth = {
   ready, enabled: () => Boolean(client), session, accessToken,
-  emailCode, verifyCode, walletSignIn, linkWallet, addEmail, signOut
+  emailLink, walletSignIn, linkWallet, addEmail, signOut
 };
