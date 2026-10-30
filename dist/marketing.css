@@ -4,6 +4,7 @@ button,a,summary{ -webkit-tap-highlight-color:transparent }
 button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #a997fa;outline-offset:3px}
 .wrap{max-width:1536px;padding-left:52px;padding-right:52px}
 .site-topline{height:7px;background:#1b1721}
+main#top{scroll-margin-top:90px}
 .site-header{height:76px;display:flex;align-items:center;gap:44px;position:sticky;top:0;z-index:40;background:#ffffffed;backdrop-filter:blur(16px);border:1px solid var(--hair);border-radius:0 0 18px 18px;box-shadow:0 8px 24px #20172c0a}
 .site-header .brand,.site-footer .brand{font-size:20px;letter-spacing:.08em;color:var(--ink)}
 .site-header .brandmark,.site-footer .brandmark{width:28px;height:28px}
@@ -64,7 +65,7 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #a9
 .section-label span{color:#a8a2b1}
 .platform-heading h2,.dark-heading h2,.quantum-text h2,.developer-section h2,.closing-new h2{font-size:clamp(40px,4vw,60px);line-height:1.09;letter-spacing:-.06em;margin:23px 0 0;font-weight:740}
 .platform-heading p{max-width:410px;color:#77707e;font-size:17px;line-height:1.65;margin:0 0 6px}
-.showcase{border:1px solid #e5e0e9;border-radius:22px;overflow:hidden;box-shadow:0 20px 70px #3524490c}
+.showcase{border:1px solid #e5e0e9;border-radius:22px;overflow:hidden;box-shadow:0 20px 70px #3524490c;scroll-margin-top:100px}
 .showcase-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:6px;background:#f5f4f8;border-bottom:1px solid var(--hair)}
 .showcase-tabs button{border:0;background:transparent;border-radius:11px;min-height:54px;text-align:center;font-size:15px;color:#5d5664;font-weight:700;transition:background .25s,color .25s,box-shadow .25s}
 .showcase-tabs button span{color:#a9a0b2;font-size:11px;letter-spacing:.1em;margin-right:12px}
