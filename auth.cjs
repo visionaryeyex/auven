@@ -28,11 +28,20 @@ async function client() {
   return clientPromise;
 }
 
-async function userFromToken(token) {
+async function userFromToken(token, sdk) {
   if (!configured() || !token || token.split('.').length !== 3) return null;
   try {
-    // users().get verifies the signed Privy identity token before returning linked accounts.
-    const user = await (await client()).users().get({ id_token: token });
+    sdk ||= await client();
+    let user;
+    try {
+      // An identity token carries signed linked accounts, so no Privy user lookup is needed.
+      user = await sdk.users().get({ id_token: token });
+    } catch {
+      // Email sessions can be valid before Privy issues an identity token. Verify the
+      // access token first, then fetch linked accounts using only its verified user ID.
+      const claims = await sdk.utils().auth().verifyAccessToken(token);
+      user = await sdk.users()._get(claims.user_id);
+    }
     if (!/^did:privy:[a-zA-Z0-9]+$/.test(user?.id || '')) return null;
     const { email, wallets } = identities(user);
     if (!email && !wallets.length) return null;

@@ -61,7 +61,7 @@ The first command verifies the ML-DSA-65 signature and digest. The second also c
 | Message | Meaning |
 | --- | --- |
 | `database_not_configured` | The deployment is missing `DATABASE_URL`; contact the operator. |
-| `invalid_session` | Sign in again; the Privy session may have expired or identity tokens may be disabled. |
+| `invalid_session` | Sign in again; the Privy session may have expired or its token could not be verified. |
 | `workspace_not_found` | Create a workspace or claim a legacy one. |
 | `provider_not_configured` | The operator has not set the OpenAI key. |
 | `mainnet_signer_not_configured` | Proof publication is not enabled. Export and verify the proof offchain meanwhile. |

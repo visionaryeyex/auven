@@ -48,7 +48,7 @@ function sectionPrimer(kicker,title,copy,items,action=''){
 function renderAccess(page){
   if(window.auvenAuth.enabled()){
     if(window.auvenAuth.signedIn()){
-      renderGuide(page,`<div class="guide-auth-head"><span>ACCOUNT SETUP</span><h2>Finishing sign-in</h2><p>Your Privy session is active, but the identity token is not available yet. Try again shortly. If this continues, the site operator should check “Return user data in an identity token” in Privy Dashboard → User management → Authentication → Advanced.</p></div><button class="button outline" type="button" id="auth-retry">Try again</button><button class="button outline" type="button" id="auth-signout">Sign out</button>`,'account');
+      renderGuide(page,`<div class="guide-auth-head"><span>ACCOUNT SETUP</span><h2>Finishing sign-in</h2><p>Your Privy session is active, but its authentication token is not available yet. Try again shortly or sign out and enter again.</p></div><button class="button outline" type="button" id="auth-retry">Try again</button><button class="button outline" type="button" id="auth-signout">Sign out</button>`,'account');
       content.querySelector('#auth-retry').onclick=()=>render(page);
       content.querySelector('#auth-signout').onclick=async()=>{await window.auvenAuth.signOut();render(page)};
       return;

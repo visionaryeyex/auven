@@ -8,19 +8,30 @@ let bridge = null;
 let finishSdkReady;
 const sdkReady = new Promise(resolve => { finishSdkReady = resolve; });
 let lastIdentity = null;
+let fallbackToken = null;
+let fallbackTokenUntil = 0;
+let fallbackTokenPromise = null;
+let lastUserId = null;
 
 function Bridge() {
-  const { ready, authenticated, user, logout } = usePrivy();
+  const { ready, authenticated, user, getAccessToken, logout } = usePrivy();
   const { identityToken } = useIdentityToken();
   const { login } = useLogin();
   const { linkEmail, linkWallet } = useLinkAccount({
     onSuccess: () => window.dispatchEvent(new Event('auven-auth-change'))
   });
-  bridge = { ready, authenticated, user, identityToken, logout, login, linkEmail, linkWallet };
+  bridge = { ready, authenticated, user, identityToken, getAccessToken, logout, login, linkEmail, linkWallet };
   const identity = ready ? `${authenticated}:${user?.id || ''}:${Boolean(identityToken)}:${JSON.stringify(user?.linkedAccounts || [])}` : null;
   useEffect(() => {
     if (!ready) return;
     finishSdkReady();
+    const userId = authenticated ? user?.id || null : null;
+    if (userId !== lastUserId) {
+      lastUserId = userId;
+      fallbackToken = null;
+      fallbackTokenUntil = 0;
+      fallbackTokenPromise = null;
+    }
     if (identity !== lastIdentity) {
       lastIdentity = identity;
       window.dispatchEvent(new Event('auven-auth-change'));
@@ -68,7 +79,16 @@ const ready = (async () => {
 async function accessToken() {
   await ready;
   if (!bridge?.authenticated) return null;
-  return bridge.identityToken || null;
+  if (bridge.identityToken) return bridge.identityToken;
+  if (fallbackToken && Date.now() < fallbackTokenUntil) return fallbackToken;
+  if (!fallbackTokenPromise) fallbackTokenPromise = bridge.getAccessToken()
+    .then(token => {
+      fallbackToken = token;
+      fallbackTokenUntil = token ? Date.now() + 20 * 60 * 1000 : 0;
+      return token;
+    })
+    .finally(() => { fallbackTokenPromise = null; });
+  return fallbackTokenPromise;
 }
 
 function assertBridge() {
@@ -80,7 +100,11 @@ async function emailLogin() { assertBridge().login({ loginMethods: ['email'] });
 async function walletSignIn() { assertBridge().login({ loginMethods: ['wallet'], walletChainType: 'ethereum-only' }); }
 async function linkWallet() { assertBridge().linkWallet(); }
 async function addEmail() { assertBridge().linkEmail(); }
-async function signOut() { if (bridge?.authenticated) await bridge.logout(); }
+async function signOut() {
+  fallbackToken = null;
+  fallbackTokenUntil = 0;
+  if (bridge?.authenticated) await bridge.logout();
+}
 
 window.auvenAuth = {
   ready, enabled: () => Boolean(config.enabled && bridge?.ready),

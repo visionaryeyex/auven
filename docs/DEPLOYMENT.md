@@ -15,7 +15,7 @@ The browser does not receive the database URI. AUVEN's server connects to Postgr
 
 ## 2. Privy authentication
 
-Create an AUVEN application in the [Privy Dashboard](https://dashboard.privy.io/). In **User management → Authentication**, enable **Email** and **Wallet** login. In **Advanced**, enable **Return user data in an identity token**. AUVEN sends that signed identity token to its API so the server can verify the user's email and linked EVM wallets. Add the production domain and local development origin to the app's allowed origins. Set the app's name and purple appearance in Privy.
+Create an AUVEN application in the [Privy Dashboard](https://dashboard.privy.io/). In **User management → Authentication**, enable **Email** and **Wallet** login. In **Advanced**, enable **Return user data in an identity token** when available. AUVEN uses the signed identity token when Privy provides it; otherwise the server verifies the Privy access token and retrieves the user's linked accounts from Privy. Add the production domain and local development origin to the app's allowed origins. Set the app's name and purple appearance in Privy.
 
 In **Configuration → App settings → Basics**, copy the app ID and generate a read-only server app secret. AUVEN uses it to verify identity tokens and does not use Privy wallet-management APIs. Add both to Vercel Production:
 
@@ -38,7 +38,7 @@ The production project is **auven-wxk9**. Set variables for **Production**, then
 | --- | --- | --- |
 | `DATABASE_URL` | Every database-backed route | Supabase Transaction pooler URI, port 6543 |
 | `AUVEN_PRIVY_APP_ID` | Email and wallet sign-in | Privy app ID |
-| `AUVEN_PRIVY_APP_SECRET` | Server verification of signed identity tokens | Privy app secret |
+| `AUVEN_PRIVY_APP_SECRET` | Server verification of Privy tokens and linked account lookup | Privy app secret |
 | `AUVEN_SETUP_TOKEN` | Legacy workspace bootstrap by admin token | 32 random bytes; already configured in the current Vercel project |
 | `AUVEN_PQ_SIGNING_SEED` | Stable ML-DSA-65 signing identity | 32 random bytes encoded as 64 hex characters; already configured |
 | `AUVEN_OPENAI_API_KEY` | Controlled OpenAI chat requests | OpenAI Platform project API key |
