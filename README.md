@@ -32,7 +32,7 @@ AUVEN registers and controls agents you already run; it does not host or create 
 
 [$AUVEN](https://robinhoodchain.blockscout.com/address/0x6e6e172ad5d06f6ca79f9c9b355fd8cdc2afb64d) is an ERC-20 token on Robinhood Chain mainnet (chain ID 4663). Contract: `0x6e6e172ad5d06f6ca79f9c9b355fd8cdc2afb64d`.
 
-The token contract is separate from this repository. The server reads its `balanceOf` function at a specific mainnet block; no token private key or transfer approval is needed. In the **$AUVEN** workspace tab, a holder can create a signed proof recording the verified wallet, balance, block, token contract, and agent ID. The proof is an observation at that block, not a continuing balance guarantee. It can be exported and optionally published as a commitment through the existing proof registry. See the [token page](https://auven.xyz/token.html).
+The token contract is separate from this repository. The server reads its `balanceOf` function at a specific mainnet block; no token private key or transfer approval is needed. In the **$AUVEN** workspace tab, a holder can create a signed proof recording the verified wallet, balance, block, token contract, and agent ID. The proof is an observation at that block, not a continuing balance guarantee. It can be exported and optionally published as a commitment through the existing proof registry. See the [token page](https://auven.xyz/token).
 
 The token is not required for sign-in, agent registration, gateway requests, or proof publication. Token payments, bonus quotas, and burning are not active.
 

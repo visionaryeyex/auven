@@ -23,8 +23,14 @@ const files = new Map([
 const port = Number(process.env.PORT || 4174);
 http.createServer((req, res) => {
   if (req.url.startsWith('/api/')) return handler(req, res);
-  const pathname = new URL(req.url, 'http://127.0.0.1').pathname;
-  const name = pathname === '/' ? 'index.html' : pathname.slice(1);
+  const url = new URL(req.url, 'http://127.0.0.1');
+  const pathname = url.pathname;
+  if (pathname === '/index.html' || pathname === '/token.html' || pathname === '/token/' || pathname === '/index') {
+    const target = pathname.startsWith('/token') ? '/token' : '/';
+    res.writeHead(308, {location: target + url.search});
+    return res.end();
+  }
+  const name = pathname === '/' ? 'index.html' : pathname === '/token' ? 'token.html' : pathname.slice(1);
   const contentType = files.get(name);
   if (!contentType) {
     res.writeHead(404);
