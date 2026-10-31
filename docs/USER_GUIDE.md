@@ -1,5 +1,7 @@
 # Use AUVEN
 
+For Codex or Claude Code, follow the [MCP setup guide](MCP.md) after connecting an agent. MCP tool calls use that agent's gateway credential and appear in Activity.
+
 AUVEN connects to agents that run in your application. It does not host an agent or create one for you. Requests are controlled only when your agent sends them through the AUVEN gateway.
 
 ## Sign in and set up a workspace
@@ -7,7 +9,7 @@ AUVEN connects to agents that run in your application. It does not host an agent
 If the deployment has Privy enabled, open **Explore dashboard** and choose one method:
 
 - **Email:** enter your address in the Privy modal, then enter the one-time code from the email. First verified sign-in creates your AUVEN profile.
-- **Wallet:** connect an EVM wallet in the Privy modal and sign the login message. AUVEN sets Robinhood Chain mainnet (chain ID 4663) as its default network. Signing in is offchain and does not spend gas.
+- **Wallet:** connect an EVM wallet in the Privy modal and sign the login message. AUVEN sets Robinhood Chain (chain ID 4663) as its default network. Signing in is offchain and does not spend gas.
 
 Create a workspace when prompted. If you already have a workspace created with an admin token, select **Claim existing workspace** and enter that token. Save the admin token shown when a new workspace is created; it appears once. Email and wallet sessions can then access the workspace without pasting it again.
 
@@ -40,8 +42,8 @@ Every request needs a unique idempotency key of 8–128 characters. A repeated k
 - **Agents** lists registered external agents. Use **Stop** to block new gateway calls or **Resume** to allow them again.
 - **Policies** explains the current deterministic rule: registered active agent, sufficient daily budget, and an idempotency key.
 - **Activity** shows recorded gateway decisions and reasons.
-- **Proofs** shows signed passports and activity checkpoints. Export a proof as JSON. If the backend mainnet signer is configured and funded, **Publish** submits its commitment and **Verify** checks inclusion.
-- **$AUVEN** reads the balance of wallets linked to your verified Privy account on Robinhood Chain mainnet. If you hold the token and have a registered agent, select that agent and create an ML-DSA-65 holder proof. Find the new proof in **Proofs** to export or publish it.
+- **Proofs** shows signed passports and activity checkpoints. Export a proof as JSON. If the backend chain signer is configured and funded, **Publish** submits its commitment and **Verify** checks inclusion.
+- **$AUVEN** reads the balance of wallets linked to your verified Privy account on Robinhood Chain. If you hold the token and have a registered agent, select that agent and create an ML-DSA-65 holder proof. Find the new proof in **Proofs** to export or publish it.
 - **Profile** manages sign-in methods and sign-out when Privy is configured.
 
 An activity checkpoint can be created through `POST /api/checkpoints` with a workspace session or admin token and an `agent_id`. The UI then shows the resulting proof in **Proofs**.
@@ -57,7 +59,7 @@ node verify.cjs auven-proof.json
 node verify.cjs auven-proof.json 0xTRANSACTION_HASH 0xTRUSTED_PUBLISHER [0xREGISTRY_ADDRESS]
 ```
 
-The first command verifies the ML-DSA-65 signature and digest. The second also checks the Robinhood Chain mainnet transaction against a publisher address you trust. Supply the registry address if the proof was published through the deployed registry. The chain stores a commitment, not the private activity details or an onchain ML-DSA verification.
+The first command verifies the ML-DSA-65 signature and digest. The second also checks the Robinhood Chain transaction against a publisher address you trust. Supply the registry address if the proof was published through the deployed registry. The chain stores a commitment, not the private activity details or an onchain ML-DSA verification.
 
 ## Troubleshooting
 
@@ -67,7 +69,7 @@ The first command verifies the ML-DSA-65 signature and digest. The second also c
 | `invalid_session` | Sign in again; the Privy session may have expired or its token could not be verified. |
 | `workspace_not_found` | Create a workspace or claim a legacy one. |
 | `provider_not_configured` | The operator has not set the OpenAI key. |
-| `mainnet_signer_not_configured` | Proof publication is not enabled. Export and verify the proof offchain meanwhile. |
+| `chain_signer_not_configured` | Proof publication is not enabled. Export and verify the proof offchain meanwhile. |
 | `wallet_not_linked` | Link an EVM wallet to your Privy account in **Profile**. |
-| `token_balance_required` | The verified linked wallet has no $AUVEN at the checked mainnet block. |
+| `token_balance_required` | The verified linked wallet has no $AUVEN at the checked chain block. |
 | `token_rpc_unavailable` | The Robinhood Chain RPC could not be reached; try the balance read again. |

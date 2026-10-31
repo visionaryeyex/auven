@@ -8,7 +8,7 @@ async function main() {
   if (!rpcUrl) throw new Error('Set AUVEN_RH_RPC_URL to a production endpoint');
   const provider = new JsonRpcProvider(rpcUrl);
   const network = await provider.getNetwork();
-  if (Number(network.chainId) !== 4663) throw new Error('RPC is not Robinhood Chain mainnet (4663)');
+  if (Number(network.chainId) !== 4663) throw new Error('RPC is not Robinhood Chain (4663)');
   const signer = new Wallet(key, provider);
   if ((await provider.getBalance(signer.address)) === 0n) throw new Error('Dedicated signer needs ETH on Robinhood Chain for gas');
   const { abi, bytecode } = compile();

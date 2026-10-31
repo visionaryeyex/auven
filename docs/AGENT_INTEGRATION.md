@@ -1,5 +1,7 @@
 # Connect an agent to AUVEN
 
+For Codex and Claude Code, start with the [MCP setup guide](MCP.md). This page covers direct calls from your own application.
+
 AUVEN controls requests made through its gateway. Your agent continues to run in your own application. Give each agent its own AUVEN credential and send its supported OpenAI chat requests to AUVEN instead of directly to OpenAI.
 
 ## Register and save the credential
@@ -51,4 +53,4 @@ The gateway checks that the credential belongs to an active agent, estimates bud
 
 The workspace owner can stop or resume the agent and inspect **Activity**. A signed passport is created when the agent is registered. An activity checkpoint is created with `POST /api/checkpoints` and `{"agent_id":"AGENT_ID"}` using a workspace session or admin token. The resulting proof can be exported and checked with `node verify.cjs proof.json`.
 
-Publishing a proof commitment to Robinhood Chain mainnet is a separate owner action. It requires a funded backend signer, costs gas, and does not put the activity details or the ML-DSA signature onchain.
+Publishing a proof commitment to Robinhood Chain is a separate owner action. It requires a funded backend signer, costs gas, and does not put the activity details or the ML-DSA signature onchain.

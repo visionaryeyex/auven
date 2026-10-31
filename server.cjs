@@ -22,7 +22,10 @@ const files = new Map([
 
 const port = Number(process.env.PORT || 4174);
 http.createServer((req, res) => {
-  if (req.url.startsWith('/api/')) return handler(req, res);
+  if (req.url.startsWith('/api/') || req.url === '/mcp' || req.url.startsWith('/mcp?')) {
+    if (req.url.startsWith('/mcp')) req.url = '/api' + req.url;
+    return handler(req, res);
+  }
   const url = new URL(req.url, 'http://127.0.0.1');
   const pathname = url.pathname;
   if (pathname === '/index.html' || pathname === '/token.html' || pathname === '/token/' || pathname === '/index') {

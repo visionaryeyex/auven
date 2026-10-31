@@ -6,5 +6,5 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": { "api/route.js": { "maxDuration": 60 } },
-  "rewrites": [{ "source": "/api/:path*", "destination": "/api/route?auven_path=:path*" }]
+  "rewrites": [{ "source": "/mcp", "destination": "/api/route?auven_path=mcp" }, { "source": "/api/:path*", "destination": "/api/route?auven_path=:path*" }]
 }

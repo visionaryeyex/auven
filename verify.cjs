@@ -5,7 +5,7 @@ const { verifyInclusion } = require('./chain.cjs');
 async function main() {
   const [file, tx, publisher, registry] = process.argv.slice(2);
   if (!file) {
-    console.error('Usage: node verify.cjs proof.json [mainnet-transaction-hash] [trusted-publisher-address] [registry-address]');
+    console.error('Usage: node verify.cjs proof.json [chain-transaction-hash] [trusted-publisher-address] [registry-address]');
     process.exitCode = 2;
     return;
   }

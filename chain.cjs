@@ -18,7 +18,7 @@ function config(){const key=process.env.AUVEN_RH_PRIVATE_KEY,registry=process.en
 function provider(){return new JsonRpcProvider(RPC_URL)}
 async function assertChain(rpc){const network=await rpc.getNetwork();if(Number(network.chainId)!==CHAIN_ID)throw Error('wrong_chain');return network}
 async function publish(bundle,{rpc=provider(),key=process.env.AUVEN_RH_PRIVATE_KEY}={}){
-  if(!key)throw Error('mainnet_signer_not_configured');
+  if(!key)throw Error('chain_signer_not_configured');
   await assertChain(rpc);
   const signer=new Wallet(key,rpc);
   const registry=process.env.AUVEN_RH_REGISTRY_ADDRESS;

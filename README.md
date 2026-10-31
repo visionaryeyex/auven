@@ -22,17 +22,18 @@ The gateway controls traffic sent through it. An agent that calls a provider dir
 
 - **Agent identity.** Register an external agent in a workspace and issue a credential. The agent's passport is signed when it is registered.
 - **Request control.** Stop or resume an agent, reserve against its daily limit, reject duplicate request IDs, and record allowed and denied calls. The supported provider route is OpenAI chat completions when a server key is configured.
+- **MCP connection.** Connect Codex or Claude Code to an agent-scoped remote MCP server. Its `auven_chat` tool uses the same gateway policy and Activity log. [Setup guide](docs/MCP.md).
 - **Verifiable records.** Sign activity checkpoints with ML-DSA-65, export proofs, and reject changed payloads or signatures with the standalone verifier.
-- **Mainnet commitment.** Submit the hash of a signed proof on Robinhood Chain mainnet, then check the receipt, signer, target, and commitment. The included [proof registry](https://robinhoodchain.blockscout.com/address/0xEAc2A9D6389ea558eF04191fC99b7AB94A90fc22) is deployed on chain 4663.
+- **Onchain commitment.** Submit the hash of a signed proof on Robinhood Chain, then check the receipt, signer, target, and commitment. The included [proof registry](https://robinhoodchain.blockscout.com/address/0xEAc2A9D6389ea558eF04191fC99b7AB94A90fc22) is deployed on chain 4663.
 - **$AUVEN holder proof.** Read the token balance of a Privy-verified linked wallet on Robinhood Chain and create an ML-DSA-65 signed snapshot for an agent in that account's workspace.
 
 AUVEN registers and controls agents you already run; it does not host or create their runtime. Spending is estimated from the requested token limit and is not a provider invoice.
 
 ## $AUVEN token
 
-[$AUVEN](https://robinhoodchain.blockscout.com/address/0x6e6e172ad5d06f6ca79f9c9b355fd8cdc2afb64d) is an ERC-20 token on Robinhood Chain mainnet (chain ID 4663). Contract: `0x6e6e172ad5d06f6ca79f9c9b355fd8cdc2afb64d`.
+[$AUVEN](https://robinhoodchain.blockscout.com/address/0x6e6e172ad5d06f6ca79f9c9b355fd8cdc2afb64d) is an ERC-20 token on Robinhood Chain (chain ID 4663). Contract: `0x6e6e172ad5d06f6ca79f9c9b355fd8cdc2afb64d`.
 
-The token contract is separate from this repository. The server reads its `balanceOf` function at a specific mainnet block; no token private key or transfer approval is needed. In the **$AUVEN** workspace tab, a holder can create a signed proof recording the verified wallet, balance, block, token contract, and agent ID. The proof is an observation at that block, not a continuing balance guarantee. It can be exported and optionally published as a commitment through the existing proof registry. See the [token page](https://auven.xyz/token).
+The token contract is separate from this repository. The server reads its `balanceOf` function at a specific chain block; no token private key or transfer approval is needed. In the **$AUVEN** workspace tab, a holder can create a signed proof recording the verified wallet, balance, block, token contract, and agent ID. The proof is an observation at that block, not a continuing balance guarantee. It can be exported and optionally published as a commitment through the existing proof registry. See the [token page](https://auven.xyz/token).
 
 The token is not required for sign-in, agent registration, gateway requests, or proof publication. Token payments, bonus quotas, and burning are not active.
 
@@ -88,7 +89,7 @@ node verify.cjs path/to/proof.json
 node verify.cjs path/to/proof.json 0xTRANSACTION_HASH 0xTRUSTED_PUBLISHER [0xREGISTRY_ADDRESS]
 ```
 
-The first command checks the signature and digest. The second also checks inclusion on Robinhood Chain mainnet (chain ID 4663) against the publisher address you trust. Supply the registry address if that proof was published through the deployed registry. Without a registry configured, the server writes the commitment in a zero-value transaction to its dedicated signer. The chain does not verify the ML-DSA signature. A valid proof establishes that its bytes match the signature and recorded commitment; it does not establish that the underlying activity was truthful.
+The first command checks the signature and digest. The second also checks inclusion on Robinhood Chain (chain ID 4663) against the publisher address you trust. Supply the registry address if that proof was published through the deployed registry. Without a registry configured, the server writes the commitment in a zero-value transaction to its dedicated signer. The chain does not verify the ML-DSA signature. A valid proof establishes that its bytes match the signature and recorded commitment; it does not establish that the underlying activity was truthful.
 
 | Route | Purpose |
 | --- | --- |
@@ -96,12 +97,13 @@ The first command checks the signature and digest. The second also checks inclus
 | `GET /api/agents`, `POST /api/agents` | List or register connected agents |
 | `PATCH /api/agents/:id/status` | Stop or resume an agent |
 | `POST /api/gateway/chat` | Apply policy and forward a supported request |
+| `POST /mcp` | Agent-scoped Streamable HTTP MCP endpoint for `auven_chat` |
 | `GET /api/events` | Read the workspace activity log |
 | `POST /api/checkpoints`, `GET /api/proofs` | Sign a checkpoint and inspect proofs |
-| `POST /api/proofs/:id/publish` | Submit a proof commitment when a mainnet signer is configured |
+| `POST /api/proofs/:id/publish` | Submit a proof commitment when a chain signer is configured |
 | `GET /api/proofs/:id/inclusion` | Check the transaction and commitment |
 | `POST /api/verify` | Verify a signed proof without database access |
-| `GET /api/token/status` | Read the balance of Privy-verified linked wallets on mainnet |
+| `GET /api/token/status` | Read the balance of Privy-verified linked wallets on Robinhood Chain |
 | `POST /api/token/attest` | Create an agent holder proof for a verified linked wallet with a positive balance |
 
 ## Hosted setup
@@ -117,7 +119,7 @@ The first command checks the signature and digest. The second also checks inclus
 | `AUVEN_PQ_SIGNING_SEED` | Stable signing identity: 32 random bytes encoded as 64 hex characters |
 | `AUVEN_OPENAI_API_KEY` | Enables the supported OpenAI gateway route |
 | `AUVEN_MODEL` | Optional model name; defaults to `gpt-6.1-sol` |
-| `AUVEN_RH_PRIVATE_KEY` | Dedicated funded signer for mainnet publication |
+| `AUVEN_RH_PRIVATE_KEY` | Dedicated funded signer for onchain publication |
 | `AUVEN_RH_RPC_URL` | Robinhood Chain RPC for proof publication and server-side $AUVEN balance reads; a public fallback exists |
 | `AUVEN_RH_REGISTRY_ADDRESS` | Optional deployed proof registry; required to use the contract route |
 
@@ -129,4 +131,4 @@ For request examples and error handling in an existing agent application, see th
 
 ## Code
 
-`api-handler.cjs` implements the API; `db.cjs` and `db-postgres.cjs` provide local and hosted storage; `proof.cjs` signs and verifies records; `chain.cjs` submits and checks mainnet commitments; `verify.cjs` is the standalone verifier. Tests under `test/` cover the API flow, policy decisions, workspace isolation, proof tampering, and receipt checks.
+`api-handler.cjs` implements the API; `db.cjs` and `db-postgres.cjs` provide local and hosted storage; `proof.cjs` signs and verifies records; `chain.cjs` submits and checks onchain commitments; `verify.cjs` is the standalone verifier. Tests under `test/` cover the API flow, policy decisions, workspace isolation, proof tampering, and receipt checks.
