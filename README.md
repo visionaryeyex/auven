@@ -24,6 +24,7 @@ The gateway controls traffic sent through it. An agent that calls a provider dir
 - **Request control.** Stop or resume an agent, reserve against its daily limit, reject duplicate request IDs, and record allowed and denied calls. The supported provider route is OpenAI chat completions when a server key is configured.
 - **Verifiable records.** Sign activity checkpoints with ML-DSA-65, export proofs, and reject changed payloads or signatures with the standalone verifier.
 - **Mainnet commitment.** Submit the hash of a signed proof on Robinhood Chain mainnet, then check the receipt, signer, target, and commitment. The included [proof registry](https://robinhoodchain.blockscout.com/address/0xEAc2A9D6389ea558eF04191fC99b7AB94A90fc22) is deployed on chain 4663.
+- **$AUVEN holder proof.** Read the token balance of a Privy-verified linked wallet on Robinhood Chain and create an ML-DSA-65 signed snapshot for an agent in that account's workspace.
 
 AUVEN registers and controls agents you already run; it does not host or create their runtime. Spending is estimated from the requested token limit and is not a provider invoice.
 
@@ -31,7 +32,9 @@ AUVEN registers and controls agents you already run; it does not host or create 
 
 [$AUVEN](https://robinhoodchain.blockscout.com/address/0x6e6e172ad5d06f6ca79f9c9b355fd8cdc2afb64d) is an ERC-20 token on Robinhood Chain mainnet (chain ID 4663). Contract: `0x6e6e172ad5d06f6ca79f9c9b355fd8cdc2afb64d`.
 
-The token contract is separate from this repository. The current AUVEN application does not require the token for sign-in, agent registration, gateway requests, or proof publication. Token-based payments and holder benefits are not implemented.
+The token contract is separate from this repository. The server reads its `balanceOf` function at a specific mainnet block; no token private key or transfer approval is needed. In the **$AUVEN** workspace tab, a holder can create a signed proof recording the verified wallet, balance, block, token contract, and agent ID. The proof is an observation at that block, not a continuing balance guarantee. It can be exported and optionally published as a commitment through the existing proof registry. See the [token page](https://auven.xyz/token.html).
+
+The token is not required for sign-in, agent registration, gateway requests, or proof publication. Token payments, bonus quotas, and burning are not active.
 
 ## Run locally
 
@@ -98,6 +101,8 @@ The first command checks the signature and digest. The second also checks inclus
 | `POST /api/proofs/:id/publish` | Submit a proof commitment when a mainnet signer is configured |
 | `GET /api/proofs/:id/inclusion` | Check the transaction and commitment |
 | `POST /api/verify` | Verify a signed proof without database access |
+| `GET /api/token/status` | Read the balance of Privy-verified linked wallets on mainnet |
+| `POST /api/token/attest` | Create an agent holder proof for a verified linked wallet with a positive balance |
 
 ## Hosted setup
 
@@ -113,7 +118,7 @@ The first command checks the signature and digest. The second also checks inclus
 | `AUVEN_OPENAI_API_KEY` | Enables the supported OpenAI gateway route |
 | `AUVEN_MODEL` | Optional model name; defaults to `gpt-6.1-sol` |
 | `AUVEN_RH_PRIVATE_KEY` | Dedicated funded signer for mainnet publication |
-| `AUVEN_RH_RPC_URL` | Optional Robinhood Chain RPC override |
+| `AUVEN_RH_RPC_URL` | Robinhood Chain RPC for proof publication and server-side $AUVEN balance reads; a public fallback exists |
 | `AUVEN_RH_REGISTRY_ADDRESS` | Optional deployed proof registry; required to use the contract route |
 
 Configure sensitive values as server-side Vercel secrets and redeploy after changing them. The Privy app ID is public; its app secret stays on the server. Back up the PQ seed: changing it creates a different signing identity. See [SECURITY.md](SECURITY.md).

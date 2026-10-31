@@ -1,6 +1,6 @@
 # Deploy AUVEN
 
-This guide describes the current application, its Supabase project, and the production Vercel project. AUVEN can publish proof commitments in a transaction to the dedicated signer or through the included registry contract after it is deployed. A token is not required for this release.
+This guide describes the current application, its Supabase project, and the production Vercel project. AUVEN can publish proof commitments in a transaction to the dedicated signer or through the included registry contract after it is deployed. The token is optional for core gateway use; a linked holder can create an agent holder proof.
 
 ## 1. Supabase database
 
@@ -44,7 +44,7 @@ The production project is **auven-wxk9**. Set variables for **Production**, then
 | `AUVEN_OPENAI_API_KEY` | Controlled OpenAI chat requests | OpenAI Platform project API key |
 | `AUVEN_MODEL` | Optional model override | Defaults to `gpt-6.1-sol` in code |
 | `AUVEN_RH_PRIVATE_KEY` | Mainnet proof publication | Dedicated AUVEN backend wallet, funded with ETH on Robinhood Chain |
-| `AUVEN_RH_RPC_URL` | Optional production RPC | Robinhood Chain RPC provider endpoint; code has a public fallback |
+| `AUVEN_RH_RPC_URL` | Mainnet proof publication and server-side token balance reads | Robinhood Chain RPC provider endpoint; code has a public fallback |
 | `AUVEN_RH_REGISTRY_ADDRESS` | Optional registry mode | Deployed and verified `AuvenProofRegistry` address on chain 4663 |
 
 Keep `DATABASE_URL`, `AUVEN_PRIVY_APP_SECRET`, `AUVEN_SETUP_TOKEN`, `AUVEN_PQ_SIGNING_SEED`, `AUVEN_OPENAI_API_KEY`, and `AUVEN_RH_PRIVATE_KEY` as Sensitive server-side variables. The Privy app ID is a public identifier. Do not add a Supabase service role key, wallet seed phrase, or your personal wallet private key to this application. Remove the obsolete `AUVEN_SUPABASE_URL` and `AUVEN_SUPABASE_PUBLISHABLE_KEY` variables after Privy sign-in succeeds.
@@ -70,7 +70,7 @@ Publishing a proof is an actual mainnet transaction and costs gas. With no `AUVE
 3. Add the address to Vercel Production as `AUVEN_RH_REGISTRY_ADDRESS` and redeploy. New proofs go through the registry. Existing signer transactions remain verifiable because each proof record stores the original target.
 4. Publish one small proof and confirm `/api/proofs/:id/inclusion` returns `included: true`. The verifier checks the registry call and `ProofCommitted` event. For an exported proof, use `node verify.cjs proof.json TX_HASH TRUSTED_PUBLISHER REGISTRY_ADDRESS`.
 
-The ML-DSA signature is checked offchain by AUVEN's verifier; the contract records only the commitment. There is no token contract or token economics in this repository. Do not describe a mainnet commitment as an onchain post-quantum signature check.
+The ML-DSA signature is checked offchain by AUVEN's verifier; the contract records only the commitment. The $AUVEN ERC-20 contract is deployed separately at `0x6E6E172ad5d06f6cA79F9C9B355Fd8cDC2Afb64D`. The server reads `balanceOf` at a mainnet block for Privy-verified linked wallets; this read uses `AUVEN_RH_RPC_URL` and never exposes it in the browser. No token payment or burn contract is configured. Do not describe a mainnet commitment as an onchain post-quantum signature check.
 
 ## 6. Release check
 

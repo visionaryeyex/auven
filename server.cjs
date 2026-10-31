@@ -8,6 +8,8 @@ const files = new Map([
   ['style.css', 'text/css'],
   ['dashboard.css', 'text/css'],
   ['marketing.css', 'text/css'],
+  ['token.html', 'text/html'],
+  ['token.css', 'text/css'],
   ['marketing.js', 'text/javascript'],
   ['app.js', 'text/javascript'],
   ['auth.js', 'text/javascript'],
@@ -21,7 +23,8 @@ const files = new Map([
 const port = Number(process.env.PORT || 4174);
 http.createServer((req, res) => {
   if (req.url.startsWith('/api/')) return handler(req, res);
-  const name = req.url === '/' ? 'index.html' : req.url.slice(1).split('?')[0];
+  const pathname = new URL(req.url, 'http://127.0.0.1').pathname;
+  const name = pathname === '/' ? 'index.html' : pathname.slice(1);
   const contentType = files.get(name);
   if (!contentType) {
     res.writeHead(404);

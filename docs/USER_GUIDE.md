@@ -41,9 +41,12 @@ Every request needs a unique idempotency key of 8–128 characters. A repeated k
 - **Policies** explains the current deterministic rule: registered active agent, sufficient daily budget, and an idempotency key.
 - **Activity** shows recorded gateway decisions and reasons.
 - **Proofs** shows signed passports and activity checkpoints. Export a proof as JSON. If the backend mainnet signer is configured and funded, **Publish** submits its commitment and **Verify** checks inclusion.
+- **$AUVEN** reads the balance of wallets linked to your verified Privy account on Robinhood Chain mainnet. If you hold the token and have a registered agent, select that agent and create an ML-DSA-65 holder proof. Find the new proof in **Proofs** to export or publish it.
 - **Profile** manages sign-in methods and sign-out when Privy is configured.
 
 An activity checkpoint can be created through `POST /api/checkpoints` with a workspace session or admin token and an `agent_id`. The UI then shows the resulting proof in **Proofs**.
+
+The holder proof records the wallet, token balance, block, and agent at the time of the read. It exposes the holder wallet and observed balance when exported. It does not move or lock tokens, and it does not prove that a wallet still holds the same amount later. The token is optional for all other AUVEN features. Token payments, bonus quotas, and burns are not active.
 
 ## Verify a proof
 
@@ -65,3 +68,6 @@ The first command verifies the ML-DSA-65 signature and digest. The second also c
 | `workspace_not_found` | Create a workspace or claim a legacy one. |
 | `provider_not_configured` | The operator has not set the OpenAI key. |
 | `mainnet_signer_not_configured` | Proof publication is not enabled. Export and verify the proof offchain meanwhile. |
+| `wallet_not_linked` | Link an EVM wallet to your Privy account in **Profile**. |
+| `token_balance_required` | The verified linked wallet has no $AUVEN at the checked mainnet block. |
+| `token_rpc_unavailable` | The Robinhood Chain RPC could not be reached; try the balance read again. |

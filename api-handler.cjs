@@ -1,5 +1,5 @@
 const D=process.env.DATABASE_URL?require('./db-postgres.cjs'):process.env.VERCEL?null:require('./db.cjs');
-const P=require('./proof.cjs'),Chain=require('./chain.cjs'),{createHash}=require('node:crypto');
+const P=require('./proof.cjs'),Chain=require('./chain.cjs'),Token=require('./token.cjs'),{createHash}=require('node:crypto');
 const Auth=require('./auth.cjs'),Accounts=process.env.DATABASE_URL?require('./db-accounts.cjs'):null;
 const providerKey=process.env.AUVEN_OPENAI_API_KEY,model=process.env.AUVEN_MODEL||'gpt-6.1-sol';
 function send(res,status,data){res.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(data))}
@@ -19,6 +19,26 @@ if(p==='/api/ready'&&m==='GET'){if(!D)return send(res,503,{ok:false,database:'no
 if(p==='/api/verify'&&m==='POST'){const b=await body(req);return send(res,200,{signature_valid:await P.verify(b),onchain_verified:false})}
 if(!D)return send(res,503,{error:'database_not_configured'});
 if(p==='/api/me'&&m==='GET'){const owner=await account(req);if(!owner)return send(res,401,{error:'invalid_session'});return send(res,200,await Accounts.profile(owner.id,owner.user))}
+if(p==='/api/token/status'&&m==='GET'){
+  const owner=await account(req);if(!owner)return send(res,401,{error:'invalid_session'});
+  try{return send(res,200,await Token.readWallets(owner.user.wallets))}
+  catch(error){return send(res,503,{error:['wrong_token_chain','unexpected_token_contract'].includes(error.message)?error.message:'token_rpc_unavailable'})}
+}
+if(p==='/api/token/attest'&&m==='POST'){
+  const owner=await account(req);if(!owner)return send(res,401,{error:'invalid_session'});
+  const workspace=await Accounts.workspaceForAccount(owner.id);if(!workspace)return send(res,404,{error:'workspace_not_found'});
+  const input=await body(req);
+  if(typeof input.agent_id!=='string'||!await D.agentOwned(workspace.id,input.agent_id))return send(res,404,{error:'agent_not_found'});
+  if(!owner.user.wallets.length)return send(res,422,{error:'wallet_not_linked'});
+  let snapshot;
+  try{snapshot=await Token.readWallets(owner.user.wallets)}
+  catch(error){return send(res,503,{error:['wrong_token_chain','unexpected_token_contract'].includes(error.message)?error.message:'token_rpc_unavailable'})}
+  if(!snapshot.holder)return send(res,422,{error:'token_balance_required'});
+  const wallet=snapshot.wallets.filter(item=>BigInt(item.balance_raw)>0n).sort((a,b)=>BigInt(a.balance_raw)===BigInt(b.balance_raw)?0:BigInt(a.balance_raw)>BigInt(b.balance_raw)?-1:1)[0];
+  const proof=await P.sign({type:'token_holder_attestation',version:1,workspace_id:workspace.id,agent_id:input.agent_id,wallet_address:wallet.address,token_address:Token.ADDRESS,token_symbol:snapshot.symbol,token_decimals:snapshot.decimals,balance_raw:wallet.balance_raw,chain_id:snapshot.chain_id,block_number:snapshot.block_number,checked_at:snapshot.checked_at});
+  const id=await D.createProof(workspace.id,input.agent_id,'token_holder',proof);
+  return send(res,201,{id,proof,onchain_status:'not_published'});
+}
 if(p==='/api/workspaces'&&m==='POST'){const b=await body(req);if(typeof b.name!=='string'||b.name.trim().length<2)return send(res,400,{error:'invalid_name'});if(bearer(req).split('.').length===3){const owner=await account(req);if(!owner)return send(res,401,{error:'invalid_session'});if(await Accounts.workspaceForAccount(owner.id))return send(res,409,{error:'workspace_exists'});return send(res,201,await Accounts.createWorkspaceForAccount(owner.id,b.name.trim()))}if(process.env.AUVEN_SETUP_TOKEN&&req.headers['x-setup-token']!==process.env.AUVEN_SETUP_TOKEN)return send(res,403,{error:'invalid_setup_token'});if(!process.env.AUVEN_SETUP_TOKEN&&await D.countWorkspaces()>0)return send(res,403,{error:'setup_closed'});return send(res,201,await D.createWorkspace(b.name.trim()))}
 if(p==='/api/workspaces/claim'&&m==='POST'){const owner=await account(req);if(!owner)return send(res,401,{error:'invalid_session'});if(await Accounts.workspaceForAccount(owner.id))return send(res,409,{error:'workspace_exists'});const b=await body(req);if(typeof b.admin_token!=='string'||!b.admin_token)return send(res,400,{error:'admin_token_required'});const w=await Accounts.claimWorkspace(owner.id,b.admin_token);return w?send(res,200,{workspace:w}):send(res,404,{error:'workspace_not_found'})}
 if(p==='/api/agents'&&m==='GET'){const w=await admin(req,res);if(!w)return;return send(res,200,{agents:await D.listAgents(w.id)})}
