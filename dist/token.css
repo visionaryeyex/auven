@@ -39,25 +39,49 @@
 .token-flow-icon{width:43px;height:43px;border-radius:10px;background:#f1edff;color:#7057e8;display:grid;place-items:center;font-size:23px;margin:48px 0 19px}
 .token-flow-grid h3{font-size:22px;letter-spacing:-.04em;margin:0 0 10px}
 .token-flow-grid p{font-size:15px;line-height:1.65;color:#797280;margin:0}
-.token-utility{padding-top:104px;padding-bottom:118px;border-top:1px solid #eeebf2}
-.token-utility-head{max-width:760px}
-.token-utility-head h2{font-size:clamp(39px,3.5vw,56px);line-height:1.08;letter-spacing:-.055em;margin:17px 0}
-.token-utility-head p{font-size:17px;line-height:1.65;color:#716a79}
-.token-utility-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:42px}
-.token-utility-grid article{border:1px solid #e8e4ec;border-radius:15px;padding:27px;min-height:275px;display:flex;flex-direction:column;background:#fff}
-.token-utility-grid article.live{border-color:#cfc3ff;background:linear-gradient(155deg,#f6f3ff,#fff 65%)}
-.token-utility-grid article>div{display:flex;justify-content:space-between;gap:10px;align-items:center}
-.token-utility-grid article>div span{font-size:10px;letter-spacing:.1em;color:#8f8797;font-weight:800}
-.token-utility-grid article>div b{font-size:9px;white-space:nowrap;letter-spacing:.08em;padding:6px 8px;border-radius:30px;background:#f0eef3;color:#77717d}
-.token-utility-grid article.live>div b{background:#e7e0ff;color:#6547dc}
-.token-utility-grid h3{font-size:25px;letter-spacing:-.04em;margin:52px 0 9px}
-.token-utility-grid p{font-size:15px;line-height:1.6;color:#766f7c;margin:0}
-.token-utility-grid i{font-style:normal;color:#7057e8;font-size:11px;font-weight:700;margin-top:auto;padding-top:22px}
-.token-burn{display:grid;grid-template-columns:1fr 1fr;gap:55px;align-items:center;border:1px solid #ded6fb;background:#f7f5ff;border-radius:17px;padding:38px;margin-top:17px}
-.token-burn h3{font-size:27px;letter-spacing:-.045em;margin:13px 0 8px}.token-burn p{font-size:15px;line-height:1.65;color:#766f7c;margin:0;max-width:560px}
-.token-burn-diagram{display:flex;align-items:center;justify-content:space-between;gap:7px}
-.token-burn-diagram span{border:1px solid #dcd4f0;border-radius:9px;background:#fff;min-height:68px;padding:14px;display:grid;place-items:center;text-align:center;flex:1;font-size:12px;font-weight:700}
-.token-burn-diagram i{font-style:normal;color:#7057e8;font-size:17px}
+.token-roadmap{padding-top:112px;padding-bottom:118px;border-top:1px solid #eeebf2}
+.token-roadmap-heading{max-width:880px}
+.token-roadmap-heading h2{font-size:clamp(45px,4.4vw,70px);line-height:1.04;letter-spacing:-.06em;margin:19px 0 22px}
+.token-roadmap-heading h2 em{font-style:normal;color:var(--violet)}
+.token-roadmap-heading>p{font-size:18px;line-height:1.65;color:#716a79;max-width:780px}
+.token-roadmap-key{display:flex;gap:23px;flex-wrap:wrap;margin-top:33px;color:#6b6473;font-size:12px;font-weight:650}
+.token-roadmap-key span{display:flex;align-items:center;gap:8px}
+.token-roadmap-key i{width:9px;height:9px;border-radius:50%;background:#d6d1de}
+.token-roadmap-key .key-live{background:#7057e8}.token-roadmap-key .key-build{background:#bdaeff}
+.token-roadmap-list{margin-top:54px;position:relative}
+.token-roadmap-list:before{content:"";position:absolute;top:28px;bottom:35px;left:27px;width:1px;background:linear-gradient(#7057e8 0%,#c9bdf6 25%,#e7e2ef 80%)}
+.token-milestone{display:grid;grid-template-columns:56px minmax(0,1fr);gap:24px;position:relative;margin-bottom:14px}
+.token-milestone-rail{padding-top:20px;z-index:1}
+.token-milestone-rail span{display:grid;place-items:center;width:55px;height:55px;background:#fff;border:1px solid #e4dfee;border-radius:15px;font-size:12px;letter-spacing:.08em;font-weight:800;color:#81798c;box-shadow:0 5px 20px #231c3208}
+.token-milestone.is-live .token-milestone-rail span{background:#7057e8;border-color:#7057e8;color:#fff}
+.token-milestone.is-build .token-milestone-rail span{border-color:#c2b4ff;color:#7057e8;background:#f3f0ff}
+.token-milestone-body{border:1px solid #e9e5ed;border-radius:18px;padding:27px 32px 29px;background:#fff;box-shadow:0 10px 32px #251d3506}
+.token-milestone.is-live .token-milestone-body{background:linear-gradient(125deg,#f8f6ff,#fff 50%);border-color:#dcd4ff}
+.token-milestone-top{display:flex;justify-content:space-between;align-items:center;gap:18px}
+.token-milestone-top>span{font-size:10px;font-weight:800;letter-spacing:.13em;color:#8b8295}
+.token-milestone-top b{font-size:9px;font-weight:800;letter-spacing:.1em;border-radius:30px;padding:7px 10px;background:#f1eff3;color:#78717e;white-space:nowrap}
+.token-milestone.is-live .token-milestone-top b{background:#e6dfff;color:#5d45c9}
+.token-milestone.is-build .token-milestone-top b{background:#f0ebff;color:#7057e8}
+.token-milestone h3{font-size:clamp(25px,2.5vw,34px);letter-spacing:-.05em;margin:16px 0 10px}
+.token-milestone-body>p{max-width:840px;font-size:15px;line-height:1.67;color:#706977;margin:0}
+.token-milestone-role{display:grid;grid-template-columns:145px minmax(0,1fr);gap:20px;max-width:940px;border-top:1px solid #eeeaf2;margin-top:22px;padding-top:18px;font-size:13px;line-height:1.6}
+.token-milestone-role strong{color:#7057e8}.token-milestone-role span{color:#766f7c}
+.token-market{margin:70px 0 0;background:#25202f;color:#fff;border-radius:23px;padding:42px;overflow:hidden;position:relative}
+.token-market:before{content:"";position:absolute;width:360px;height:360px;border:1px solid #b8aaff24;border-radius:50%;right:-100px;top:-230px;box-shadow:0 0 0 65px #b8aaff09,0 0 0 130px #b8aaff07;pointer-events:none}
+.token-market-copy{max-width:740px;position:relative}
+.token-market .section-label{color:#b6a5ff}
+.token-market h3{font-size:clamp(32px,3.2vw,48px);line-height:1.1;letter-spacing:-.055em;margin:15px 0}
+.token-market-copy p{color:#bcb5c6;font-size:16px;line-height:1.7}
+.token-market-map{position:relative;display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;align-items:center;gap:12px;margin-top:35px}
+.token-market-map>div:not(.token-market-outcome){min-height:143px;background:#fff;color:#24202f;border-radius:13px;padding:20px;display:flex;flex-direction:column;gap:8px}
+.token-market-map small{color:#765be8;font-size:10px;letter-spacing:.13em;font-weight:800}
+.token-market-map strong{font-size:21px;letter-spacing:-.04em}
+.token-market-map span{font-size:12px;color:#7f7688;line-height:1.45}
+.token-market-map>i{font-size:19px;color:#ae9aff;font-style:normal;text-align:center}
+.token-market-outcome{grid-column:5;display:flex;flex-wrap:wrap;gap:8px}
+.token-market-outcome span{border:1px solid #ffffff30;border-radius:100px;padding:8px 12px;color:#dfd7ee;font-size:11px;font-weight:700}
+.token-market-outcome em{font-style:normal;color:#b9a7ff}
+.token-market-note{font-size:12px;line-height:1.6;color:#a99fb5;margin:28px 0 0}
 .token-dark{background:#211d29;color:#fff;overflow:hidden}
 .token-dark-inner{display:grid;grid-template-columns:1fr .8fr;align-items:center;gap:10vw;padding-top:110px;padding-bottom:110px}
 .token-dark .section-label{color:#a997ff}
@@ -75,6 +99,8 @@
 .token-address-card>span{font-size:11px;font-weight:800;color:#7057e8;letter-spacing:.12em}
 .token-address-card code{font-size:15px;overflow-wrap:anywhere}
 .token-address-card a{font-size:13px;font-weight:700;color:#7057e8}
-@media(max-width:900px){.token-hero,.token-dark-inner,.token-details,.token-band-inner,.token-burn{grid-template-columns:1fr;gap:45px}.token-hero{padding-top:70px}.token-hero-visual{max-width:640px;width:100%}.token-flow-grid article{padding:23px}.token-utility-grid{grid-template-columns:1fr}}
-@media(max-width:650px){.token-hero{padding-top:62px;padding-bottom:75px}.token-hero h1{font-size:54px}.token-hero-copy>p{font-size:17px}.token-hero-actions .button{width:100%}.token-hero-visual{min-height:410px}.token-visual-node{width:88%}.token-band-inner,.token-flow,.token-utility,.token-dark-inner,.token-details{padding-top:75px;padding-bottom:80px}.token-flow-grid{grid-template-columns:1fr;margin-top:34px}.token-flow-grid article,.token-flow-grid article+article{border:1px solid #eae6ee;border-radius:0;min-height:245px}.token-flow-grid article+article{border-top:0}.token-flow-grid article:first-child{border-radius:14px 14px 0 0}.token-flow-grid article:last-child{border-radius:0 0 14px 14px}.token-flow-icon{margin:26px 0 12px}.token-utility-grid article{min-height:230px}.token-utility-grid h3{margin-top:35px}.token-burn{padding:24px;gap:24px}.token-burn-diagram{flex-wrap:wrap}.token-burn-diagram span{flex:1 1 100px}.token-proof-card{transform:none}.token-address-card{padding:22px}}
+@media(max-width:900px){.token-hero,.token-dark-inner,.token-details,.token-band-inner{grid-template-columns:1fr;gap:45px}.token-hero{padding-top:70px}.token-hero-visual{max-width:640px;width:100%}.token-flow-grid article{padding:23px}}
+@media(max-width:900px){.token-market-map{grid-template-columns:1fr;gap:10px}.token-market-map>i{transform:rotate(90deg)}.token-market-outcome{grid-column:1}}
+@media(max-width:650px){.token-hero{padding-top:62px;padding-bottom:75px}.token-hero h1{font-size:54px}.token-hero-copy>p{font-size:17px}.token-hero-actions .button{width:100%}.token-hero-visual{min-height:410px}.token-visual-node{width:88%}.token-band-inner,.token-flow,.token-roadmap,.token-dark-inner,.token-details{padding-top:75px;padding-bottom:80px}.token-flow-grid{grid-template-columns:1fr;margin-top:34px}.token-flow-grid article,.token-flow-grid article+article{border:1px solid #eae6ee;border-radius:0;min-height:245px}.token-flow-grid article+article{border-top:0}.token-flow-grid article:first-child{border-radius:14px 14px 0 0}.token-flow-grid article:last-child{border-radius:0 0 14px 14px}.token-flow-icon{margin:26px 0 12px}.token-proof-card{transform:none}.token-address-card{padding:22px}}
+@media(max-width:650px){.token-roadmap{padding-top:78px;padding-bottom:80px}.token-roadmap-heading>p{font-size:16px}.token-roadmap-list{margin-top:38px}.token-roadmap-list:before{left:20px}.token-milestone{grid-template-columns:42px minmax(0,1fr);gap:12px}.token-milestone-rail span{width:41px;height:41px;border-radius:11px}.token-milestone-body{padding:20px}.token-milestone-role{grid-template-columns:1fr;gap:3px}.token-market{margin-top:46px;padding:27px 20px}.token-market-map>div:not(.token-market-outcome){min-height:112px}}
 @media(prefers-reduced-motion:reduce){.token-visual-node,.token-visual-line i{animation:none}}

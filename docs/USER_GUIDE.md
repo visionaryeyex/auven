@@ -1,6 +1,6 @@
 # Use AUVEN
 
-AUVEN controls requests from agents you run in your own application. It currently supports OpenAI chat requests routed through the gateway or `auven_chat` MCP tool. Calls sent directly to a provider are outside AUVEN's control.
+AUVEN lets you create a text agent in your workspace or connect an agent running in your own application. It currently supports OpenAI chat requests routed through the gateway or `auven_chat` MCP tool. Calls sent directly to a provider are outside AUVEN's control.
 
 ## Sign in and create a workspace
 
@@ -8,6 +8,18 @@ Open [AUVEN](https://auven.xyz) and choose **Open workspace**. Sign in with an e
 The setup window has a **Copy** button and masks the token until you choose **Show**. If you later need to replace it, use **Profile → Replace admin token**. The previous token stops working immediately.
 
 In **Profile**, you can link a Solana wallet to an email account or link an email to a wallet account. Do this while signed in so both methods stay on the same Privy profile and workspace. Existing signed proofs are not changed by wallet linking.
+
+If **Profile** instead says **Workspace access**, the browser is using an admin token without a personal sign-in. Sign in with email or a Solana wallet and choose **Link the workspace open in this browser** if prompted. The account can claim an existing workspace only when it does not already own one.
+
+## Create an agent in AUVEN
+
+1. Open **Create agent** in your workspace. Pick a starting template or enter a name, purpose, and instructions for a text agent.
+2. Set its initial estimated daily limit and choose **Create agent**. AUVEN stores the instructions in the workspace, issues a one-time credential, and creates an ML-DSA-65 signed passport that includes a digest of those instructions.
+3. Copy the credential from the setup window. Open **Run agent** on the same page to try a request. The response uses the agent's saved instructions and passes through its policy. It appears in **Activity**.
+4. Use **Policies** to change request limits, response size, and owner approval. Use **Agents** to stop or resume the agent. When approval is enabled, a request waits in **Approvals** before reaching OpenAI.
+5. To use the agent from Codex or Claude Code, follow the [MCP guide](MCP.md) with its credential. From your own application, call the [gateway API](AGENT_INTEGRATION.md). Only calls routed through AUVEN use its instructions and limits.
+
+The builder currently creates text agents for the supported OpenAI chat route. It does not run arbitrary code, browse the web, or connect to third-party tools on its own. Other agent types and paid agent rentals appear on the [roadmap](https://auven.xyz/token); they are not available in the dashboard.
 
 ## Connect an agent
 
@@ -61,7 +73,7 @@ Older published records remain verifiable through their original transaction. Th
 
 ## $AUVEN
 
-The $AUVEN mint is `DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump` on Solana. Link a Solana wallet in **Profile**, then open **$AUVEN** to read its balance. If the wallet holds tokens, choose one of your registered agents and create an ML-DSA-65 signed holder proof. It records a balance at one observed slot and does not move or lock tokens. Agent identity, controls, and signed activity do not require the token. Token payments, holder benefits, buybacks, and burns are not active.
+The $AUVEN mint is `DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump` on Solana. Link a Solana wallet in **Profile**, then open **$AUVEN** to read its balance. If the wallet holds tokens, choose one of your agents and create an ML-DSA-65 signed holder proof. It records a balance at one observed slot and does not move or lock tokens. Agent identity, controls, and signed activity do not require the token. Token payments, holder benefits, agent rentals, buybacks, and burns are not active. See the [product and token roadmap](https://auven.xyz/token) for the proposed flow.
 
 ## Common errors
 

@@ -11,13 +11,13 @@
 
 # AUVEN
 
-AUVEN puts a control point between an AI agent and the provider requests it makes. Connect an agent you already run, set limits in a workspace, and send supported calls through the gateway. AUVEN records each decision and can sign agent passports and activity checkpoints with ML-DSA-65. Signed proofs can be checked without trusting the dashboard.
+AUVEN puts a control point between an AI agent and the provider requests it makes. Create a text agent in your workspace or connect one you already run, set limits, and send supported calls through the gateway. AUVEN records each decision and signs agent passports and activity checkpoints with ML-DSA-65. Signed proofs can be checked without trusting the dashboard.
 
 Only traffic routed through AUVEN is controlled. An agent using a separate provider key directly is outside the gateway.
 
 ## Available now
 
-- **Workspaces and agent credentials.** Register an external agent and give it a credential scoped to the gateway. A signed passport is created at registration.
+- **Workspaces and agent credentials.** Create a text agent with instructions in AUVEN or register an external agent. Each gets a gateway credential and signed passport. Created agents can be tried from the dashboard and called through the supported MCP tool or API.
 - **Request policies.** Pause or resume an agent, set daily request and estimated spending limits, cap response tokens, and require owner approval. The supported provider route is OpenAI chat completions when the server has an API key. Spending is an estimate based on token limits, not a provider invoice.
 - **MCP access.** Connect Codex or Claude Code to an agent-scoped remote MCP endpoint. `auven_chat` sends the request through policy checks; `auven_action_status` retrieves the result of an approval. [Connect with MCP](docs/MCP.md).
 - **Activity and proofs.** Inspect allowed, denied, pending, and failed requests. Export ML-DSA-65 signed passports and checkpoints and verify them with the standalone tool.
@@ -29,7 +29,7 @@ The [interactive demo](https://auven.xyz/demo) shows policy decisions and owner 
 
 Privy email sign-in remains available. Solana wallet sign-in and wallet linking use the existing Privy application. The wallet chooser offers Backpack and other supported Solana wallets.
 
-The $AUVEN mint on Solana is [`DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump`](https://explorer.solana.com/address/DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump). Its onchain metadata identifies **Auven / AUVEN**; it uses Token-2022 with 6 decimals. AUVEN reads this mint for linked wallet balances and can sign a holder snapshot for a registered agent. Token payments, holder quotas, buybacks, burns, and distributions are not active features. Agent controls and signed activity work independently of the token. The [token page](https://auven.xyz/token) explains the flow and proposed utilities.
+The $AUVEN mint on Solana is [`DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump`](https://explorer.solana.com/address/DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump). Its onchain metadata identifies **Auven / AUVEN**; it uses Token-2022 with 6 decimals. AUVEN reads this mint for linked wallet balances and can sign a holder snapshot for a registered agent. Token payments, holder quotas, agent rental, buybacks, and burns are not active features. Agent controls and signed activity work independently of the token. The [product and token roadmap](https://auven.xyz/token) shows current features and planned work.
 
 ## Run locally
 
@@ -42,11 +42,15 @@ npm test
 npm start
 ```
 
-Open `http://127.0.0.1:4174`. Without `DATABASE_URL`, local data is kept in SQLite under `.data/`. This directory is ignored by Git. The dashboard can create a workspace and connect an agent. Save the workspace admin token and agent credential when shown; only their hashes are stored.
+Open `http://127.0.0.1:4174`. Without `DATABASE_URL`, local data is kept in SQLite under `.data/`. This directory is ignored by Git. The dashboard can create a workspace, build a text agent, and connect an external agent. Save the workspace admin token and agent credential when shown; only their hashes are stored.
 
 Copy [`.env.example`](.env.example) into a local `.env` file and add the values needed for the flows you want to test. `AUVEN_OPENAI_API_KEY` enables real gateway requests. Without it, identity, policies, signing, export, and signature verification can still be used locally.
 
 ## Connect an agent
+
+To build a text agent inside AUVEN, open **Create agent**, enter its name, purpose, instructions, and initial daily limit, then choose **Run agent** to try a policy-controlled request. Save the one-time credential to use that agent from MCP or your own server. Its instructions remain in your workspace and are applied by AUVEN to requests made through its gateway. The currently supported route is OpenAI chat.
+
+To connect an agent running elsewhere:
 
 1. Sign in and create a workspace. Open **Agents** and choose **Connect agent**.
 2. Enter the agent's name, purpose, and daily limit. Save the credential shown once.

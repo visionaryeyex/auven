@@ -6,8 +6,8 @@ MCP does **not** put every Codex or Claude Code action under AUVEN. Their own mo
 
 ## 1. Get an agent credential
 
-1. Sign in to [AUVEN](https://auven.xyz), open your workspace, and go to **Agents**.
-2. Select **Register agent**, enter a name, purpose, and daily limit, then submit. Registration alone does not connect your client.
+1. Sign in to [AUVEN](https://auven.xyz) and open your workspace. Use **Create agent** to define a text agent with saved instructions, or **Agents → Register agent** to connect an agent you already run.
+2. Set its initial daily limit and save it. Creating an identity does not connect your MCP client by itself.
 3. Copy the credential from the one-time setup window. It belongs to that agent, not to your whole workspace. Keep it private. The same window has copyable MCP setup commands. If you lose the credential, choose **Connect / test → Replace credential** in the agent row; the previous credential stops working.
 
 For each agent, **Connect / test** shows commands with its own MCP server name and environment variable. Copy those commands into PowerShell. They prompt you for the credential instead of saving it in the command or Git. The examples below use a generic name for one agent:
@@ -43,6 +43,8 @@ Claude Code expands the credential from the environment when it connects. This c
 First ask Codex or Claude Code: “Call the `auven_connection_test` tool.” It confirms the agent credential without calling OpenAI or using the agent budget. In AUVEN, choose **Agents → Connect / test → Refresh status** to see the recorded test time. This proves the MCP client reached AUVEN; registering the agent alone does not.
 
 Then ask your coding agent: “Use AUVEN's `auven_chat` tool to summarize the purpose of our project in two sentences.” Open **Activity** in AUVEN. The call should appear under the registered agent. Stop the agent in **Agents** and try again to confirm the policy blocks another call. Calls made directly by Codex or Claude Code outside `auven_chat` are not controlled by AUVEN.
+
+For an agent created in AUVEN, `auven_chat` also applies the instructions saved in its workspace. MCP callers cannot replace those instructions with their own system or developer message. External registered agents keep their instructions in their own application.
 
 In **Policies**, set each agent's daily request cap, maximum response tokens per call, estimated USD budget, and optional owner approval. When approval is on, `auven_chat` returns an action ID without calling OpenAI. Open **Approvals** in your workspace to approve or deny the request. Then ask your coding agent to use `auven_action_status` with that action ID. An approved request returns the provider result; a denied one reports the denial. Keep the same action ID when checking again; repeating `auven_chat` creates a new request.
 
