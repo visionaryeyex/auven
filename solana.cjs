@@ -1,5 +1,6 @@
 const { createHash } = require('node:crypto');
 const { Connection, Keypair, PublicKey, Transaction, TransactionInstruction } = require('@solana/web3.js');
+const { decode: decodeBase58 } = require('bs58').default;
 const { GENESIS, RPC_URL, address } = require('./token.cjs');
 
 const MEMO_PROGRAM = 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr';
@@ -12,12 +13,17 @@ const commitment = bundle => {
 const memo = bundle => `AUVEN1:${commitment(bundle).slice(2)}`;
 function signerFromSecret(secret = process.env.AUVEN_SOLANA_SECRET_KEY) {
   let bytes;
-  try { bytes = JSON.parse(secret); } catch { throw Error('invalid_solana_secret_key'); }
+  if (typeof secret !== 'string') throw Error('invalid_solana_secret_key');
+  try { bytes = secret.trim().startsWith('[') ? JSON.parse(secret) : [...decodeBase58(secret.trim())]; }
+  catch { throw Error('invalid_solana_secret_key'); }
   if (!Array.isArray(bytes) || bytes.length !== 64 || bytes.some(value => !Number.isInteger(value) || value < 0 || value > 255)) throw Error('invalid_solana_secret_key');
-  return Keypair.fromSecretKey(Uint8Array.from(bytes));
+  try { return Keypair.fromSecretKey(Uint8Array.from(bytes)); }
+  catch { throw Error('invalid_solana_secret_key'); }
 }
 function config() {
-  return { configured: Boolean(process.env.AUVEN_SOLANA_SECRET_KEY && process.env.AUVEN_SOLANA_RPC_URL), network: 'solana', mode: 'memo', program: MEMO_PROGRAM };
+  let publisher = null;
+  try { if (process.env.AUVEN_SOLANA_SECRET_KEY) publisher = signerFromSecret().publicKey.toBase58(); } catch {}
+  return { configured: Boolean(publisher && process.env.AUVEN_SOLANA_RPC_URL), publisher, network: 'solana', mode: 'memo', program: MEMO_PROGRAM };
 }
 async function assertNetwork(connection) {
   if (await connection.getGenesisHash() !== GENESIS) throw Error('wrong_chain');

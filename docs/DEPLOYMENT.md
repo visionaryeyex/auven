@@ -30,7 +30,7 @@ The existing `AUVEN_PRIVY_APP_ID` and `AUVEN_PRIVY_APP_SECRET` remain unchanged.
 | `AUVEN_OPENAI_API_KEY` | Enables controlled OpenAI chat requests |
 | `AUVEN_MODEL` | Optional model override; defaults to `gpt-6.1-sol` |
 | `AUVEN_SOLANA_RPC_URL` | Dedicated Solana RPC for proof publication and future token balance reads |
-| `AUVEN_SOLANA_SECRET_KEY` | Dedicated proof publisher's 64-byte Solana secret key as a JSON number array; required for publication only |
+| `AUVEN_SOLANA_SECRET_KEY` | Dedicated proof publisher's Base58 private key or 64-byte JSON secret array; required for publication only |
 | `AUVEN_SOLANA_TOKEN_MINT` | Optional override for the public $AUVEN mint embedded in the app |
 
 Keep server credentials Sensitive. The Solana RPC endpoint may itself contain a provider key, so keep it server-side. The Solana secret must belong to a new, dedicated wallet funded with enough SOL for transaction fees. Never use your personal wallet secret or a Privy user wallet secret.
@@ -42,7 +42,7 @@ The old `AUVEN_RH_PRIVATE_KEY`, `AUVEN_RH_RPC_URL`, and `AUVEN_RH_REGISTRY_ADDRE
 New publication uses a signed Solana transaction containing one Memo instruction. The memo holds an `AUVEN1` proof commitment, not the proof payload or its ML-DSA signature. AUVEN verifies the exported signature offchain and verifies the transaction, signer, exact memo, and Solana network separately. There is no new program to deploy for this path.
 
 1. Provision a dedicated Solana RPC and set `AUVEN_SOLANA_RPC_URL` in Vercel.
-2. Create a dedicated Solana keypair on a trusted machine. Back up its secret securely. Put the 64-byte JSON secret array in `AUVEN_SOLANA_SECRET_KEY` as a Sensitive Vercel variable. Fund the corresponding public address with a small amount of SOL.
+2. Use a dedicated Solana wallet and fund its public address with a small amount of SOL. Export that wallet's private key in Backpack or another wallet, then put its Base58 private key in `AUVEN_SOLANA_SECRET_KEY` as a Sensitive Vercel variable. A 64-byte JSON secret array is also accepted. Never enter a recovery phrase here or use a personal wallet. Confirm that the public publisher address returned by `/api/health` matches the funded wallet before publishing.
 3. Redeploy, create an activity checkpoint in AUVEN, and publish it from **Proofs**.
 4. Open the transaction in [Solana Explorer](https://explorer.solana.com/) and use **Verify** in AUVEN. A confirmed inclusion must report `included: true`.
 

@@ -1,8 +1,17 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { Keypair, Transaction, PublicKey } = require('@solana/web3.js');
+const { encode: encodeBase58 } = require('bs58').default;
 const Solana = require('../solana.cjs');
 const Token = require('../token.cjs');
+
+test('accepts a wallet-exported Base58 secret for the funded publisher', () => {
+  const signer = Keypair.generate();
+  assert.equal(Solana.signerFromSecret(encodeBase58(signer.secretKey)).publicKey.toBase58(), signer.publicKey.toBase58());
+  assert.equal(Solana.signerFromSecret(JSON.stringify([...signer.secretKey])).publicKey.toBase58(), signer.publicKey.toBase58());
+  assert.throws(() => Solana.signerFromSecret(signer.publicKey.toBase58()), /invalid_solana_secret_key/);
+  assert.throws(() => Solana.signerFromSecret('not-a-secret'), /invalid_solana_secret_key/);
+});
 
 test('publishes only a proof commitment with the dedicated signer', async () => {
   const signer = Keypair.generate();
@@ -16,7 +25,7 @@ test('publishes only a proof commitment with the dedicated signer', async () => 
     sendRawTransaction: async bytes => { sent = Transaction.from(bytes); return '3'.repeat(87); }
   };
   try {
-    const result = await Solana.publish(proof, { connection, key: JSON.stringify([...signer.secretKey]) });
+    const result = await Solana.publish(proof, { connection, key: encodeBase58(signer.secretKey) });
     assert.equal(result.network, 'solana');
     assert.equal(result.signer, signer.publicKey.toBase58());
     assert.equal(sent.instructions.length, 1);
