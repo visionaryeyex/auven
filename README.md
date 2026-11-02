@@ -29,7 +29,7 @@ The [interactive demo](https://auven.xyz/demo) shows policy decisions and owner 
 
 Privy email sign-in remains available. Solana wallet sign-in and wallet linking use the existing Privy application. The wallet chooser offers Backpack and other supported Solana wallets.
 
-The $AUVEN mint on Solana is [`DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump`](https://explorer.solana.com/address/DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump). Its onchain metadata identifies **Auven / AUVEN**; it uses Token-2022 with 6 decimals. AUVEN reads this mint for linked wallet balances and can sign a holder snapshot for a registered agent. Token payments, holder quotas, agent rental, buybacks, and burns are not active features. Agent controls and signed activity work independently of the token. The [product and token roadmap](https://auven.xyz/token) shows current features and planned work.
+The $AUVEN mint on Solana is [`DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump`](https://explorer.solana.com/address/DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump). Its onchain metadata identifies **Auven / AUVEN**; it uses Token-2022 with 6 decimals. AUVEN reads this mint for linked wallet balances and can sign a holder snapshot for a registered agent. Token payments, holder quotas, agent rental, buybacks, and burns are not active features. Agent controls and signed activity work independently of the token. The [product and token roadmap](https://auven.xyz/roadmap) shows current features and planned work.
 
 ## Run locally
 

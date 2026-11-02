@@ -47,21 +47,19 @@
 .token-roadmap-key{display:flex;gap:23px;flex-wrap:wrap;margin-top:33px;color:#6b6473;font-size:12px;font-weight:650}
 .token-roadmap-key span{display:flex;align-items:center;gap:8px}
 .token-roadmap-key i{width:9px;height:9px;border-radius:50%;background:#d6d1de}
-.token-roadmap-key .key-live{background:#7057e8}.token-roadmap-key .key-build{background:#bdaeff}
+.token-roadmap-key .key-test{background:#7057e8}
 .token-roadmap-list{margin-top:54px;position:relative}
 .token-roadmap-list:before{content:"";position:absolute;top:28px;bottom:35px;left:27px;width:1px;background:linear-gradient(#7057e8 0%,#c9bdf6 25%,#e7e2ef 80%)}
 .token-milestone{display:grid;grid-template-columns:56px minmax(0,1fr);gap:24px;position:relative;margin-bottom:14px}
 .token-milestone-rail{padding-top:20px;z-index:1}
 .token-milestone-rail span{display:grid;place-items:center;width:55px;height:55px;background:#fff;border:1px solid #e4dfee;border-radius:15px;font-size:12px;letter-spacing:.08em;font-weight:800;color:#81798c;box-shadow:0 5px 20px #231c3208}
-.token-milestone.is-live .token-milestone-rail span{background:#7057e8;border-color:#7057e8;color:#fff}
-.token-milestone.is-build .token-milestone-rail span{border-color:#c2b4ff;color:#7057e8;background:#f3f0ff}
+.token-milestone.is-test .token-milestone-rail span{background:#7057e8;border-color:#7057e8;color:#fff}
 .token-milestone-body{border:1px solid #e9e5ed;border-radius:18px;padding:27px 32px 29px;background:#fff;box-shadow:0 10px 32px #251d3506}
-.token-milestone.is-live .token-milestone-body{background:linear-gradient(125deg,#f8f6ff,#fff 50%);border-color:#dcd4ff}
+.token-milestone.is-test .token-milestone-body{background:linear-gradient(125deg,#f8f6ff,#fff 50%);border-color:#dcd4ff}
 .token-milestone-top{display:flex;justify-content:space-between;align-items:center;gap:18px}
 .token-milestone-top>span{font-size:10px;font-weight:800;letter-spacing:.13em;color:#8b8295}
 .token-milestone-top b{font-size:9px;font-weight:800;letter-spacing:.1em;border-radius:30px;padding:7px 10px;background:#f1eff3;color:#78717e;white-space:nowrap}
-.token-milestone.is-live .token-milestone-top b{background:#e6dfff;color:#5d45c9}
-.token-milestone.is-build .token-milestone-top b{background:#f0ebff;color:#7057e8}
+.token-milestone.is-test .token-milestone-top b{background:#e6dfff;color:#5d45c9}
 .token-milestone h3{font-size:clamp(25px,2.5vw,34px);letter-spacing:-.05em;margin:16px 0 10px}
 .token-milestone-body>p{max-width:840px;font-size:15px;line-height:1.67;color:#706977;margin:0}
 .token-milestone-role{display:grid;grid-template-columns:145px minmax(0,1fr);gap:20px;max-width:940px;border-top:1px solid #eeeaf2;margin-top:22px;padding-top:18px;font-size:13px;line-height:1.6}

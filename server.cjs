@@ -8,8 +8,8 @@ const files = new Map([
   ['style.css', 'text/css'],
   ['dashboard.css', 'text/css'],
   ['marketing.css', 'text/css'],
-  ['token.html', 'text/html'],
-  ['token.css', 'text/css'],
+  ['roadmap.html', 'text/html'],
+  ['roadmap.css', 'text/css'],
   ['demo.html', 'text/html'],
   ['demo.css', 'text/css'],
   ['demo.js', 'text/javascript'],
@@ -31,12 +31,12 @@ http.createServer((req, res) => {
   }
   const url = new URL(req.url, 'http://127.0.0.1');
   const pathname = url.pathname;
-  if (pathname === '/index.html' || pathname === '/token.html' || pathname === '/token/' || pathname === '/demo.html' || pathname === '/demo/' || pathname === '/index') {
-    const target = pathname.startsWith('/token') ? '/token' : pathname.startsWith('/demo') ? '/demo' : '/';
+  if (pathname === '/index.html' || pathname === '/roadmap.html' || pathname === '/roadmap/' || pathname === '/token' || pathname === '/token.html' || pathname === '/token/' || pathname === '/demo.html' || pathname === '/demo/' || pathname === '/index') {
+    const target = pathname.startsWith('/token') || pathname.startsWith('/roadmap') ? '/roadmap' : pathname.startsWith('/demo') ? '/demo' : '/';
     res.writeHead(308, {location: target + url.search});
     return res.end();
   }
-  const name = pathname === '/' || /^\/workspace(?:\/[a-z]+)?$/.test(pathname) ? 'index.html' : pathname === '/token' ? 'token.html' : pathname === '/demo' ? 'demo.html' : pathname.slice(1);
+  const name = pathname === '/' || /^\/workspace(?:\/[a-z]+)?$/.test(pathname) ? 'index.html' : pathname === '/roadmap' ? 'roadmap.html' : pathname === '/demo' ? 'demo.html' : pathname.slice(1);
   const contentType = files.get(name);
   if (!contentType) {
     res.writeHead(404);

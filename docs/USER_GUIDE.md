@@ -19,7 +19,7 @@ If **Profile** instead says **Workspace access**, the browser is using an admin 
 4. Use **Policies** to change request limits, response size, and owner approval. Use **Agents** to stop or resume the agent. When approval is enabled, a request waits in **Approvals** before reaching OpenAI.
 5. To use the agent from Codex or Claude Code, follow the [MCP guide](MCP.md) with its credential. From your own application, call the [gateway API](AGENT_INTEGRATION.md). Only calls routed through AUVEN use its instructions and limits.
 
-The builder currently creates text agents for the supported OpenAI chat route. It does not run arbitrary code, browse the web, or connect to third-party tools on its own. Other agent types and paid agent rentals appear on the [roadmap](https://auven.xyz/token); they are not available in the dashboard.
+The builder currently creates text agents for the supported OpenAI chat route. It does not run arbitrary code, browse the web, or connect to third-party tools on its own. Other agent types and paid agent rentals appear on the [roadmap](https://auven.xyz/roadmap); they are not available in the dashboard.
 
 ## Connect an agent
 
@@ -73,7 +73,7 @@ Older published records remain verifiable through their original transaction. Th
 
 ## $AUVEN
 
-The $AUVEN mint is `DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump` on Solana. Link a Solana wallet in **Profile**, then open **$AUVEN** to read its balance. If the wallet holds tokens, choose one of your agents and create an ML-DSA-65 signed holder proof. It records a balance at one observed slot and does not move or lock tokens. Agent identity, controls, and signed activity do not require the token. Token payments, holder benefits, agent rentals, buybacks, and burns are not active. See the [product and token roadmap](https://auven.xyz/token) for the proposed flow.
+The $AUVEN mint is `DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump` on Solana. Link a Solana wallet in **Profile**, then open **$AUVEN** to read its balance. If the wallet holds tokens, choose one of your agents and create an ML-DSA-65 signed holder proof. It records a balance at one observed slot and does not move or lock tokens. Agent identity, controls, and signed activity do not require the token. Token payments, holder benefits, agent rentals, buybacks, and burns are not active. See the [product and token roadmap](https://auven.xyz/roadmap) for the proposed flow.
 
 ## Common errors
 
