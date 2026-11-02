@@ -12,7 +12,11 @@ async function admin(req,res){
 }
 const amount=n=>Number.isInteger(n)&&n>=0&&n<=100000000;
 async function providerCompletion(messages,maxTokens){
-  try{const upstream=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{authorization:`Bearer ${providerKey}`,'content-type':'application/json'},body:JSON.stringify({model,messages,max_completion_tokens:maxTokens,...(model==='gpt-6.1-sol'?{reasoning_effort:'low'}:{})}),signal:AbortSignal.timeout(55000)});const result=await upstream.json();return upstream.ok?{result}:{error:'provider_error'}}
+  try{const upstream=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{authorization:`Bearer ${providerKey}`,'content-type':'application/json'},body:JSON.stringify({model,messages,max_completion_tokens:maxTokens,...(model==='gpt-6.1-sol'?{reasoning_effort:'low'}:{})}),signal:AbortSignal.timeout(55000)});const result=await upstream.json();if(upstream.ok)return {result};
+    const code=typeof result?.error?.code==='string'?result.error.code:'';
+    const error=upstream.status===401||upstream.status===403?'provider_auth_failed':code==='insufficient_quota'?'provider_quota_exceeded':upstream.status===429?'provider_rate_limited':code==='model_not_found'||upstream.status===404?'provider_model_unavailable':upstream.status===400?'provider_request_rejected':'provider_error';
+    console.error('OpenAI request rejected',{status:upstream.status,code,error});
+    return {error};}
   catch{return {error:'provider_unavailable'}}
 }
 function validHostedConfiguration(value){return typeof value.name==='string'&&value.name.trim().length>=2&&value.name.trim().length<=80&&typeof value.purpose==='string'&&value.purpose.trim().length>=2&&value.purpose.trim().length<=500&&typeof value.instructions==='string'&&value.instructions.trim().length>=20&&value.instructions.length<=4000}
