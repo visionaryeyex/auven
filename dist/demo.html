@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Explore how AUVEN checks an agent request, applies its policy, and records the outcome in an interactive simulation.">
+  <title>Agent Control demo | AUVEN</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preload" href="fonts/Geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="marketing.css">
+  <link rel="stylesheet" href="demo.css">
+  <script src="demo.js" defer></script>
+</head>
+<body>
+  <div class="site-topline" aria-hidden="true"></div>
+  <header class="site-header wrap">
+    <a class="brand" href="/" aria-label="AUVEN home"><img class="brandmark" src="logo-mark.svg" alt=""><span>AUVEN</span></a>
+    <nav class="site-nav" aria-label="Primary navigation"><a href="/#platform">Features</a><a href="/demo" aria-current="page">Interactive demo</a><a href="/#how">How it works</a><a href="/token">$AUVEN token</a><a href="/#developers">Developers</a></nav>
+    <div class="topactions"><a class="link" href="/?workspace=agents">Sign in</a><a class="button dark" href="/?workspace=agents">Open workspace <span aria-hidden="true">↗</span></a></div>
+    <details class="mobile-nav"><summary aria-label="Open navigation">Menu <span aria-hidden="true">☰</span></summary><div><a href="/">Home</a><a href="/demo">Interactive demo</a><a href="/token">$AUVEN token</a><a href="/?workspace=agents">Open workspace ↗</a></div></details>
+  </header>
+  <main>
+    <section class="demo-hero wrap">
+      <div><span class="section-label">INTERACTIVE PRODUCT DEMO <span>/ AGENT CONTROL</span></span><h1>See the decision<br><em>before the action.</em></h1><p>Follow one agent request from identity check to policy decision. Try an allowed call, a blocked limit, or owner approval.</p><div class="demo-hero-actions"><a class="button dark" href="#simulation">Run the simulation <span aria-hidden="true">↓</span></a><span>Simulated data. No account or provider call required.</span></div></div>
+      <div class="demo-hero-art" aria-hidden="true"><div class="art-ring ring-one"></div><div class="art-ring ring-two"></div><div class="art-agent"><span>A</span><small>RESEARCH AGENT</small></div><div class="art-gate"><img src="logo-mark-white.svg" alt=""><small>AUVEN</small></div><div class="art-provider"><span>⌁</span><small>OPENAI</small></div><div class="art-wire wire-one"></div><div class="art-wire wire-two"></div><div class="art-proof">✓&nbsp; Decision recorded</div></div>
+    </section>
+    <section class="demo-section" id="simulation"><div class="wrap">
+      <div class="demo-section-head"><div><span class="section-label">01 / TRY IT</span><h2>One request. Three possible outcomes.</h2></div><p>Choose a situation, then move through the checks. Every step explains what AUVEN does and when the provider receives a request.</p></div>
+      <div class="scenario-tabs" role="tablist" aria-label="Demo scenarios"><button type="button" role="tab" aria-selected="true" data-scenario="allowed"><span>01</span> Allowed request</button><button type="button" role="tab" aria-selected="false" data-scenario="blocked"><span>02</span> Limit reached</button><button type="button" role="tab" aria-selected="false" data-scenario="approval"><span>03</span> Owner approval</button></div>
+      <div class="demo-console">
+        <div class="demo-console-top"><span class="console-brand"><img src="logo-mark-white.svg" alt=""> AUVEN / CONTROL FLOW</span><span class="simulation-tag"><i></i> SIMULATION</span></div>
+        <div class="demo-console-grid"><aside class="demo-progress"><div class="demo-progress-label">REQUEST JOURNEY</div><ol id="demo-steps"></ol><div class="demo-progress-foot"><span>Agent</span><strong>Research assistant</strong><span>Route</span><strong>OpenAI chat via AUVEN</strong></div></aside>
+          <div class="demo-stage" aria-live="polite"><div class="stage-top"><span id="stage-count">STEP 01 / 05</span><span id="stage-state" class="stage-state">READY</span></div><div class="stage-icon" id="stage-icon">◈</div><h3 id="stage-title">An agent sends a request.</h3><p id="stage-copy"></p><div class="stage-signal"><div id="signal-agent"><small>01</small><strong>Agent</strong></div><span class="signal-line"></span><div id="signal-gate"><img src="logo-mark-white.svg" alt=""><strong>AUVEN</strong></div><span class="signal-line"></span><div id="signal-provider"><small>03</small><strong>Provider</strong></div></div><div class="stage-data" id="stage-data"></div><div id="stage-decision" class="decision-buttons" hidden><button type="button" data-review="approve">Approve request</button><button type="button" data-review="deny">Deny request</button></div><div class="stage-actions"><button type="button" id="demo-back">Back</button><button type="button" id="demo-next" class="button dark">Next step <span aria-hidden="true">→</span></button></div></div>
+        </div>
+      </div>
+      <p class="demo-note">This page is a visual simulation. In a real workspace, rules are saved per agent, requests appear in Activity, and owner approval runs only after you approve it.</p>
+    </div></section>
+    <section class="demo-after wrap"><div><span class="section-label">02 / IN YOUR WORKSPACE</span><h2>Use the same controls<br>with a connected agent.</h2><p>Register an agent, set its daily request and response limits in Policies, and turn on owner approval when you want to review each call. AUVEN currently controls the OpenAI chat route sent through its gateway or MCP tool.</p><div class="demo-after-actions"><a class="button dark" href="/?workspace=agents">Connect an agent ↗</a><a class="button outline" href="https://github.com/visionaryeyex/auven/blob/main/docs/MCP.md" target="_blank" rel="noreferrer">MCP setup guide ↗</a></div></div><div class="after-stack"><div><span>01</span><strong>Connect</strong><small>Agent identity and credential</small></div><div><span>02</span><strong>Control</strong><small>Limits and owner review</small></div><div><span>03</span><strong>Verify</strong><small>Activity and signed checkpoint</small></div></div></section>
+  </main>
+  <footer class="site-footer wrap"><a class="brand" href="/"><img class="brandmark" src="logo-mark.svg" alt=""><span>AUVEN</span></a><span>Identity. Control. Proof.</span><span>© 2026 AUVEN</span></footer>
+</body>
+</html>

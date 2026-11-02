@@ -36,11 +36,14 @@ curl -X POST https://YOUR_AUVEN_DOMAIN/api/gateway/chat \
 
 Every request needs a unique idempotency key of 8–128 characters. A repeated key returns a conflict. A stopped agent or one without enough daily budget is denied. AUVEN logs the decision under **Activity**. The daily amount is a request estimate, not exact provider billing.
 
+If **Require my approval** is enabled in **Policies**, the gateway responds with HTTP 202 and an `action_id`. The provider has not been called yet. Open **Approvals** to review the request and approve or deny it. The agent can then read `GET /api/actions/ACTION_ID` with its own credential. Only that agent can read its result. The `auven_action_status` MCP tool wraps this check for Codex and Claude Code. See the [interactive simulation](https://auven.xyz/demo) for a visual walkthrough; it uses sample data and makes no provider calls.
+
 ## Control and review
 
 - **Overview** shows connected agents, gateway events, and the target network.
 - **Agents** lists registered external agents. Use **Stop** to block new gateway calls or **Resume** to allow them again.
-- **Policies** explains the current deterministic rule: registered active agent, sufficient daily budget, and an idempotency key.
+- **Policies** lets you set each agent's daily request cap, maximum response tokens per call, estimated daily USD budget, and optional owner approval. A unique idempotency key is required for direct gateway requests.
+- **Approvals** lists requests held for your decision. Approving forwards the saved request to OpenAI; denying blocks it before the provider call.
 - **Activity** shows recorded gateway decisions and reasons.
 - **Proofs** shows signed passports and activity checkpoints. Export a proof as JSON. If the backend chain signer is configured and funded, **Publish** submits its commitment and **Verify** checks inclusion.
 - **$AUVEN** reads the balance of wallets linked to your verified Privy account on Robinhood Chain. If you hold the token and have a registered agent, select that agent and create an ML-DSA-65 holder proof. Find the new proof in **Proofs** to export or publish it.

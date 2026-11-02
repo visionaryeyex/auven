@@ -10,6 +10,9 @@ const files = new Map([
   ['marketing.css', 'text/css'],
   ['token.html', 'text/html'],
   ['token.css', 'text/css'],
+  ['demo.html', 'text/html'],
+  ['demo.css', 'text/css'],
+  ['demo.js', 'text/javascript'],
   ['marketing.js', 'text/javascript'],
   ['app.js', 'text/javascript'],
   ['auth.js', 'text/javascript'],
@@ -28,12 +31,12 @@ http.createServer((req, res) => {
   }
   const url = new URL(req.url, 'http://127.0.0.1');
   const pathname = url.pathname;
-  if (pathname === '/index.html' || pathname === '/token.html' || pathname === '/token/' || pathname === '/index') {
-    const target = pathname.startsWith('/token') ? '/token' : '/';
+  if (pathname === '/index.html' || pathname === '/token.html' || pathname === '/token/' || pathname === '/demo.html' || pathname === '/demo/' || pathname === '/index') {
+    const target = pathname.startsWith('/token') ? '/token' : pathname.startsWith('/demo') ? '/demo' : '/';
     res.writeHead(308, {location: target + url.search});
     return res.end();
   }
-  const name = pathname === '/' ? 'index.html' : pathname === '/token' ? 'token.html' : pathname.slice(1);
+  const name = pathname === '/' ? 'index.html' : pathname === '/token' ? 'token.html' : pathname === '/demo' ? 'demo.html' : pathname.slice(1);
   const contentType = files.get(name);
   if (!contentType) {
     res.writeHead(404);

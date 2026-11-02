@@ -14,20 +14,22 @@
 
 # AUVEN
 
-AUVEN is a gateway for AI agents that run in your own applications. It gives each connected agent a credential and a daily spending limit, checks supported requests before they reach the provider, and records the decision. Agent passports and activity checkpoints can be signed with ML-DSA-65 and verified independently.
+AUVEN is a gateway for AI agents that run in your own applications. It gives each connected agent a credential and controls supported requests with daily limits and optional owner approval. Each decision is recorded. Agent passports and activity checkpoints can be signed with ML-DSA-65 and verified independently.
 
 The gateway controls traffic sent through it. An agent that calls a provider directly with another key is outside that control.
 
 ## What works
 
 - **Agent identity.** Register an external agent in a workspace and issue a credential. The agent's passport is signed when it is registered.
-- **Request control.** Stop or resume an agent, reserve against its daily limit, reject duplicate request IDs, and record allowed and denied calls. The supported provider route is OpenAI chat completions when a server key is configured.
-- **MCP connection.** Connect Codex or Claude Code to an agent-scoped remote MCP server. Its `auven_chat` tool uses the same gateway policy and Activity log. [Setup guide](docs/MCP.md).
+- **Request control.** Stop or resume an agent, set daily request and estimated spending limits, cap response tokens, and hold calls for owner approval. AUVEN rejects duplicate request IDs and records allowed, pending, and denied calls. The supported provider route is OpenAI chat completions when a server key is configured.
+- **MCP connection.** Connect Codex or Claude Code to an agent-scoped remote MCP server. `auven_chat` uses the gateway policy; `auven_action_status` checks the result after owner review. [Setup guide](docs/MCP.md).
 - **Verifiable records.** Sign activity checkpoints with ML-DSA-65, export proofs, and reject changed payloads or signatures with the standalone verifier.
 - **Onchain commitment.** Submit the hash of a signed proof on Robinhood Chain, then check the receipt, signer, target, and commitment. The included [proof registry](https://robinhoodchain.blockscout.com/address/0xEAc2A9D6389ea558eF04191fC99b7AB94A90fc22) is deployed on chain 4663.
 - **$AUVEN holder proof.** Read the token balance of a Privy-verified linked wallet on Robinhood Chain and create an ML-DSA-65 signed snapshot for an agent in that account's workspace.
 
 AUVEN registers and controls agents you already run; it does not host or create their runtime. Spending is estimated from the requested token limit and is not a provider invoice.
+
+Try the [interactive Agent Control demo](https://auven.xyz/demo) to see an allowed call, a blocked limit, and owner approval. It is a simulation with sample data.
 
 ## $AUVEN token
 

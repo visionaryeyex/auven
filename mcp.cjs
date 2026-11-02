@@ -14,6 +14,11 @@ const tool = {
     additionalProperties: false
   }
 };
+const statusTool = {
+  name: 'auven_action_status',
+  description: 'Check the outcome of an AUVEN chat request that is waiting for workspace owner approval. Only the agent that submitted it can read the result.',
+  inputSchema: {type: 'object', properties: {action_id: {type: 'string', pattern: '^[a-f0-9]{32}$'}}, required: ['action_id'], additionalProperties: false}
+};
 
 function reply(res, status, data) {
   res.writeHead(status, {'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store'});
@@ -32,7 +37,7 @@ async function readBody(req) {
   }
   return JSON.parse(raw);
 }
-async function handle(req, res, {db, callGateway}) {
+async function handle(req, res, {db, callGateway, actionStatus}) {
   if (req.headers.origin) return reply(res, 403, {error: 'origin_not_allowed'});
   if (req.method === 'GET') return reply(res, 405, {error: 'sse_not_supported'});
   if (req.method !== 'POST') return reply(res, 405, {error: 'method_not_allowed'});
@@ -48,14 +53,23 @@ async function handle(req, res, {db, callGateway}) {
   const id = message.id;
   if (message.method === 'initialize') return rpc(res, id, {protocolVersion, capabilities: {tools: {}}, serverInfo: {name: 'auven', version: '1.0.0'}});
   if (message.method === 'ping') return rpc(res, id, {});
-  if (message.method === 'tools/list') return rpc(res, id, {tools: [tool]});
+  if (message.method === 'tools/list') return rpc(res, id, {tools: [tool, statusTool]});
   if (message.method !== 'tools/call') return error(res, id, -32601, 'Method not found');
+  if (message.params?.name === statusTool.name) {
+    const actionId=message.params.arguments?.action_id;
+    if(typeof actionId!=='string'||!/^[a-f0-9]{32}$/.test(actionId))return error(res,id,-32602,'Invalid action ID');
+    const outcome=await actionStatus({credential,actionId});
+    if(outcome.status!==200)return rpc(res,id,{isError:true,content:[{type:'text',text:outcome.data.error||'request_failed'}]});
+    const action=outcome.data.action,answer=action.result?.choices?.[0]?.message?.content;
+    return rpc(res,id,{content:[{type:'text',text:action.status==='completed'?`${typeof answer==='string'?answer:JSON.stringify(action.result)}\n\nAUVEN event: ${action.event_id}`:`Status: ${action.status}. Action ID: ${action.id}${action.result?.error?`. ${action.result.error}`:''}`}]});
+  }
   if (message.params?.name !== tool.name) return error(res, id, -32602, 'Unknown tool');
   const args = message.params.arguments;
   if (!args || typeof args.prompt !== 'string' || !args.prompt.trim() || args.prompt.length > 16000 || (args.max_tokens !== undefined && (!Number.isInteger(args.max_tokens) || args.max_tokens < 1 || args.max_tokens > 4096))) return error(res, id, -32602, 'Invalid tool arguments');
   const outcome = await callGateway({credential, prompt: args.prompt, maxTokens: args.max_tokens ?? 256, requestId: randomUUID()});
+  if(outcome.status===202)return rpc(res,id,{content:[{type:'text',text:`Awaiting workspace owner approval. Action ID: ${outcome.data.action_id}. Use auven_action_status with this ID to read the outcome after review.`}]});
   if (outcome.status !== 200) return rpc(res, id, {isError: true, content: [{type: 'text', text: `AUVEN ${outcome.status}: ${outcome.data.error || 'request_failed'}${outcome.data.event_id ? ` (event ${outcome.data.event_id})` : ''}`}]});
   const answer = outcome.data.result?.choices?.[0]?.message?.content;
   return rpc(res, id, {content: [{type: 'text', text: `${typeof answer === 'string' ? answer : JSON.stringify(outcome.data.result)}\n\nAUVEN event: ${outcome.data.event_id}`}]});
 }
-module.exports = {handle, tool};
+module.exports = {handle, tool, statusTool};

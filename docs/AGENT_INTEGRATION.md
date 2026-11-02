@@ -31,12 +31,18 @@ const response = await fetch('https://YOUR_AUVEN_DOMAIN/api/gateway/chat', {
 });
 const data = await response.json();
 if (!response.ok) throw new Error(`${response.status}: ${data.error}`);
-console.log(data.event_id, data.result);
+if (response.status === 202) {
+  console.log('Awaiting owner approval:', data.action_id);
+} else {
+  console.log(data.event_id, data.result);
+}
 ```
 
-The route accepts a nonempty `messages` array and `max_tokens` from 1 to 4096. It returns an `event_id` and the provider response under `result`. Use a unique `Idempotency-Key` of 8–128 characters for each logical call. If you retry an uncertain call, reuse the same key; AUVEN returns `409 duplicate_request` rather than forwarding it twice. A new call gets a new key.
+The route accepts a nonempty `messages` array and `max_tokens` from 1 to 4096. A call allowed without review returns an `event_id` and the provider response under `result`. A call held for owner review returns HTTP 202 with an `action_id`; it has not reached OpenAI. Use a unique `Idempotency-Key` of 8–128 characters for each logical call. If you retry an uncertain call, reuse the same key; AUVEN returns `409 duplicate_request` rather than forwarding it twice. A new call gets a new key.
 
-The gateway checks that the credential belongs to an active agent, estimates budget from `max_tokens`, reserves that amount, forwards the request, and records the result. This estimate is **not** exact provider billing. Start with a low limit and review activity before increasing it. The policy applies only to requests routed through AUVEN; direct provider calls remain outside this gateway.
+The gateway checks that the credential belongs to an active agent, applies the daily request cap and response token cap, estimates budget from `max_tokens`, and records the decision. If owner approval is required, the request waits in **Approvals** until the owner approves or denies it. This estimate is **not** exact provider billing. Start with a low limit and review activity before increasing it. The policy applies only to requests routed through AUVEN; direct provider calls remain outside this gateway.
+
+After a 202 response, check `GET /api/actions/ACTION_ID` with the same agent credential. It returns `pending`, `processing`, `completed`, `denied`, or `failed`. A completed action includes the provider response under `action.result`. Check again after the owner has reviewed it; do not resubmit the original chat request to poll for its outcome. The workspace owner can change the agent policy before approval, and the new limits are checked again before a provider call.
 
 ## Responses to handle
 
@@ -45,6 +51,8 @@ The gateway checks that the credential belongs to an active agent, estimates bud
 | 400 | `idempotency_key_required` or `invalid_request` | Correct the header or JSON body. |
 | 401 | `invalid_agent_credential` | Check the server-side credential; register a new agent if it was lost. |
 | 403 | `agent_stopped` or `budget_exceeded` | Ask the workspace owner to resume the agent or review its daily limit. |
+| 403 | `request_limit_exceeded` or `token_limit_exceeded` | Review the daily request cap or maximum response tokens in **Policies**. |
+| 202 | `pending_approval` | Save the returned `action_id`, wait for owner review, then check its status. |
 | 409 | `duplicate_request` | Treat this as an already-seen logical request. Inspect the returned event. |
 | 503 | `provider_not_configured` | The AUVEN operator must set `AUVEN_OPENAI_API_KEY`. |
 | 502 | `provider_error` or `provider_unavailable` | Inspect Activity and retry according to your application policy with a new logical request ID only when appropriate. |

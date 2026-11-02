@@ -1,9 +1,15 @@
 CREATE TABLE IF NOT EXISTS workspaces (id text PRIMARY KEY, name text NOT NULL, admin_hash text NOT NULL UNIQUE);
 CREATE TABLE IF NOT EXISTS agents (id text PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces(id), name text NOT NULL, purpose text NOT NULL, status text NOT NULL DEFAULT 'active' CHECK (status IN ('active','stopped')), daily_limit integer NOT NULL CHECK (daily_limit >= 0), credential_hash text NOT NULL UNIQUE, created_at text NOT NULL);
 CREATE INDEX IF NOT EXISTS agents_workspace_idx ON agents(workspace_id);
+ALTER TABLE agents ADD COLUMN IF NOT EXISTS daily_request_limit integer NOT NULL DEFAULT 100 CHECK (daily_request_limit BETWEEN 0 AND 10000);
+ALTER TABLE agents ADD COLUMN IF NOT EXISTS max_tokens_per_request integer NOT NULL DEFAULT 4096 CHECK (max_tokens_per_request BETWEEN 1 AND 4096);
+ALTER TABLE agents ADD COLUMN IF NOT EXISTS approval_required boolean NOT NULL DEFAULT false;
 CREATE TABLE IF NOT EXISTS events (id text PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces(id), agent_id text NOT NULL REFERENCES agents(id), request_id text NOT NULL, decision text NOT NULL, reason text NOT NULL, reserved integer NOT NULL DEFAULT 0, actual integer NOT NULL DEFAULT 0, created_at text NOT NULL, UNIQUE(agent_id,request_id));
 CREATE INDEX IF NOT EXISTS events_workspace_time_idx ON events(workspace_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS events_agent_time_idx ON events(agent_id,created_at);
+CREATE TABLE IF NOT EXISTS action_requests (id text PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces(id), agent_id text NOT NULL REFERENCES agents(id), event_id text NOT NULL UNIQUE REFERENCES events(id), messages_json text NOT NULL, max_tokens integer NOT NULL, status text NOT NULL CHECK (status IN ('pending','processing','completed','denied','failed')), result_json text, created_at text NOT NULL, decided_at text);
+CREATE INDEX IF NOT EXISTS action_requests_workspace_time_idx ON action_requests(workspace_id,created_at DESC);
+CREATE INDEX IF NOT EXISTS action_requests_agent_time_idx ON action_requests(agent_id,created_at DESC);
 CREATE TABLE IF NOT EXISTS proofs (id text PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces(id), agent_id text NOT NULL REFERENCES agents(id), kind text NOT NULL, payload text NOT NULL, signature text NOT NULL, public_key text NOT NULL, created_at text NOT NULL, tx_hash text, chain_status text, chain_signer text);
 CREATE INDEX IF NOT EXISTS proofs_workspace_time_idx ON proofs(workspace_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS proofs_agent_idx ON proofs(agent_id);
@@ -51,6 +57,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS workspaces_account_idx ON workspaces(account_i
 ALTER TABLE workspaces ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE action_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE proofs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE account_auth_users ENABLE ROW LEVEL SECURITY;
@@ -61,10 +68,10 @@ ALTER TABLE wallet_link_challenges ENABLE ROW LEVEL SECURITY;
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
-    REVOKE ALL ON TABLE workspaces, agents, events, proofs, accounts, account_auth_users, account_privy_users, account_wallets, wallet_link_challenges FROM anon;
+    REVOKE ALL ON TABLE workspaces, agents, events, action_requests, proofs, accounts, account_auth_users, account_privy_users, account_wallets, wallet_link_challenges FROM anon;
   END IF;
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
-    REVOKE ALL ON TABLE workspaces, agents, events, proofs, accounts, account_auth_users, account_privy_users, account_wallets, wallet_link_challenges FROM authenticated;
+    REVOKE ALL ON TABLE workspaces, agents, events, action_requests, proofs, accounts, account_auth_users, account_privy_users, account_wallets, wallet_link_challenges FROM authenticated;
   END IF;
 END
 $$;
