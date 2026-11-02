@@ -14,6 +14,18 @@ test('agent registration is distinct from gateway use and rotating a credential 
   assert.equal((await call('GET','/api/agents',null,workspace.admin_token)).agents.find(a=>a.id===id).has_gateway_activity,1);
 });
 test('gateway forwards a Sol chat request with a compatible completion limit',async()=>{const a=await call('POST','/api/agents',{name:'Test bot',purpose:'Test',daily_limit_cents:1000},workspace.admin_token);const originalFetch=global.fetch;let upstreamBody;global.fetch=async(_url,options)=>{upstreamBody=JSON.parse(options.body);return {ok:true,json:async()=>({choices:[{message:{content:'Hello'}}],usage:{total_tokens:96}})}};try{const out=await call('POST','/api/gateway/chat',{messages:[{role:'user',content:'Hello'}],max_tokens:256},a.agent.credential,{'idempotency-key':'sol-request-0001'});assert.equal(out.status,200);assert.equal(out.result.choices[0].message.content,'Hello');assert.equal(upstreamBody.model,'gpt-6.1-sol');assert.equal(upstreamBody.max_completion_tokens,256);assert.equal(upstreamBody.reasoning_effort,'low');assert.equal('max_tokens' in upstreamBody,false)}finally{global.fetch=originalFetch}});
+test('completed gateway activity can be signed as a verifiable checkpoint',async()=>{
+  const agent=await call('POST','/api/agents',{name:'Checkpoint bot',purpose:'Proof test',daily_limit_cents:1000},workspace.admin_token);
+  const originalFetch=global.fetch;global.fetch=async()=>({ok:true,json:async()=>({choices:[{message:{content:'Done'}}],usage:{total_tokens:12}})});
+  try{const run=await call('POST','/api/gateway/chat',{messages:[{role:'user',content:'Record this'}],max_tokens:32},agent.agent.credential,{'idempotency-key':'checkpoint-request-001'});assert.equal(run.status,200)}finally{global.fetch=originalFetch}
+  const checkpoint=await call('POST','/api/checkpoints',{agent_id:agent.agent.id},workspace.admin_token);
+  assert.equal(checkpoint.status,201);assert.equal(checkpoint.proof.payload.event_count,1);
+  assert.equal((await call('POST','/api/verify',checkpoint.proof)).signature_valid,true);
+  const altered=structuredClone(checkpoint.proof);altered.payload.event_count=2;
+  assert.equal((await call('POST','/api/verify',altered)).signature_valid,false);
+  const listed=await call('GET','/api/proofs',null,workspace.admin_token);
+  assert.ok(listed.proofs.some(proof=>proof.kind==='checkpoint'&&proof.agent_id===agent.agent.id));
+});
 test('MCP authenticates agent, exposes scoped tools, and applies gateway policy',async()=>{
   const a=await call('POST','/api/agents',{name:'MCP bot',purpose:'Research',daily_limit_cents:1000},workspace.admin_token);
   const request=(id,method,params)=>({jsonrpc:'2.0',id,method,params});

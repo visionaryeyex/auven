@@ -404,3 +404,14 @@ dialog input,dialog textarea { padding: 12px; border-radius: 8px; }
 @media(max-width:960px){.hosted-grid{grid-template-columns:1fr}}
 @media(max-width:650px){.hosted-agent-cta{align-items:flex-start;flex-direction:column}.hosted-agent-cta .button{width:100%}}
 @media(max-width:580px){.hosted-intro{padding:29px 23px}.hosted-intro h2{font-size:28px}.hosted-panel{padding:23px}}
+.proof-checkpoint{padding:28px;margin-bottom:22px;background:linear-gradient(110deg,#f7f4ff,#fff 72%);border-color:#e4ddfa}
+.proof-checkpoint h2{margin:10px 0 7px!important;font-size:22px!important;letter-spacing:-.04em}
+.proof-checkpoint p{margin:0;color:#766f7e;font-size:13px;line-height:1.6}
+.proof-checkpoint form{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin-top:20px}
+.proof-checkpoint label{flex:1 1 230px;margin:0;color:#24202f;font-size:12px;font-weight:700}
+.proof-checkpoint select{display:block;width:100%;margin-top:7px;padding:12px;border:1px solid #ded9e9;border-radius:8px;background:#fff;color:#24202f;font:inherit}
+.proof-checkpoint #checkpoint-message{min-height:18px;margin-top:13px;color:#5e47cc}
+.proof-row{flex-wrap:wrap}
+.proof-row>div:first-child{flex:1 1 280px}
+.proof-row [data-proof-status]{color:#5e47cc}
+@media(max-width:580px){.proof-checkpoint{padding:23px}.proof-checkpoint form .button{width:100%}.proof-row .button{flex:1 1 auto}}
