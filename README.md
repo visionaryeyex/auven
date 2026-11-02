@@ -27,9 +27,9 @@ The [interactive demo](https://auven.xyz/demo) shows policy decisions and owner 
 
 ## Solana transition and $AUVEN
 
-Privy email sign-in remains available. Solana wallet sign-in and wallet linking are prepared in the app; the operator must enable Solana in the existing Privy application. Existing EVM wallet-only accounts have a separate recovery sign-in path so their owners can link a Solana wallet without losing their workspace.
+Privy email sign-in remains available. Solana wallet sign-in and wallet linking use the existing Privy application. Existing EVM wallet-only accounts have a separate recovery sign-in path so their owners can link a Solana wallet without losing their workspace.
 
-The Solana $AUVEN mint has not been configured. Until a confirmed mint exists, the app does not show token balances or issue holder proofs. Token payments, holder quotas, buybacks, burns, and distributions are not active features. Agent controls and signed activity work independently of the token. The [token page](https://auven.xyz/token) describes the current state and proposed utilities.
+The $AUVEN mint on Solana is [`DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump`](https://explorer.solana.com/address/DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump). Its onchain metadata identifies **Auven / AUVEN**; it uses Token-2022 with 6 decimals. The holder balance path is implemented but remains unavailable on the hosted app until the mint is configured and tested there. Token payments, holder quotas, buybacks, burns, and distributions are not active features. Agent controls and signed activity work independently of the token. The [token page](https://auven.xyz/token) describes the current state and proposed utilities.
 
 ## Run locally
 
@@ -96,7 +96,7 @@ Vercel serves the public pages and API. Supabase PostgreSQL stores hosted data; 
 | `AUVEN_SETUP_TOKEN` | Optional legacy workspace bootstrap |
 | `AUVEN_SOLANA_RPC_URL` | Dedicated Solana RPC for publication and token reads |
 | `AUVEN_SOLANA_SECRET_KEY` | Dedicated funded Solana proof publisher; required only for publication |
-| `AUVEN_SOLANA_TOKEN_MINT` | Confirmed token mint; leave unset until the token exists |
+| `AUVEN_SOLANA_TOKEN_MINT` | Confirmed $AUVEN mint shown above; enables balance reads and holder proofs |
 
 Keep the database URL, signing seed, API key, and publisher secret in server-side secret storage. Redeploy after changing Vercel variables. See the [deployment guide](docs/DEPLOYMENT.md), [user guide](docs/USER_GUIDE.md), and [agent integration guide](docs/AGENT_INTEGRATION.md).
 
