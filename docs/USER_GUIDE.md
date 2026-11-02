@@ -5,15 +5,18 @@ AUVEN controls requests from agents you run in your own application. It currentl
 ## Sign in and create a workspace
 
 Open [AUVEN](https://auven.xyz) and choose **Open workspace**. Sign in with an email code or a Solana wallet through Privy. Create a workspace when prompted. Save the admin token shown once; it is a recovery and API credential.
+The setup window has a **Copy** button and masks the token until you choose **Show**. If you later need to replace it, use **Profile → Replace admin token**. The previous token stops working immediately.
 
 In **Profile**, you can link a Solana wallet to an email account or link an email to a wallet account. Do this while signed in so both methods stay on the same Privy profile and workspace. Existing signed proofs are not changed by wallet linking.
 
 ## Connect an agent
 
-1. Open **Agents** and choose **Connect agent**.
+1. Open **Agents** and choose **Register agent**. This creates an identity; it does not connect an external client yet.
 2. Enter a name, purpose, and estimated daily spending limit in USD.
-3. Save the agent credential shown once. Store it on your agent application's server, never in frontend code or a public repository.
-4. Route supported requests through AUVEN with that credential. The provider API key stays on the AUVEN server.
+3. Copy the agent credential from the setup window. Store it on your agent application's server, never in frontend code or a public repository.
+4. Use **Connect / test** in the agent row to copy PowerShell setup commands for Codex CLI or Claude Code. Run them on the computer where that client is installed, and paste the credential when prompted. A web page cannot install an MCP server into your local client by itself. The provider API key stays on the AUVEN server.
+5. In Codex or Claude Code, ask it to call `auven_connection_test`. Choose **Refresh status** in AUVEN. The recorded test time confirms the client authenticated through MCP; no OpenAI call or budget is used.
+6. Ask the client to call `auven_chat` for a real gateway request. **Agents** then shows “Gateway request seen”; the result appears in **Activity**. If the credential is lost or exposed, open **Connect / test → Replace credential**. The old credential stops working immediately.
 
 For Codex or Claude Code, follow the [MCP setup guide](MCP.md). The tool `auven_chat` uses the connected agent's credential. The coding assistant's other model calls remain outside AUVEN.
 

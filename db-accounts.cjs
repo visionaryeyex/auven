@@ -55,4 +55,10 @@ async function claimWorkspace(accountId, adminToken) {
   return result.rows[0] || null;
 }
 
-module.exports = { resolveAccount, profile, workspaceForAccount, createWorkspaceForAccount, claimWorkspace };
+async function rotateWorkspaceToken(accountId) {
+  const token = secret();
+  const result = await pool.query('UPDATE workspaces SET admin_hash=$1 WHERE account_id=$2 RETURNING id', [hash(token), accountId]);
+  return result.rowCount ? token : null;
+}
+
+module.exports = { resolveAccount, profile, workspaceForAccount, createWorkspaceForAccount, claimWorkspace, rotateWorkspaceToken };

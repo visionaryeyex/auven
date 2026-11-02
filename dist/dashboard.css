@@ -333,3 +333,36 @@ dialog input,dialog textarea { padding: 12px; border-radius: 8px; }
   .guide-story h2,.soon-page h2 { font-size: 34px; }
   #app .guide-auth { padding: 27px; }
 }
+
+#credential-dialog { width: min(670px, calc(100% - 32px)); max-height: min(88vh, 850px); overflow: auto; border: 1px solid #e6e1ef; border-radius: 18px; color: #24202f; }
+#credential-dialog .credential-shell { padding: 31px; }
+.credential-top { display: flex; align-items: center; justify-content: space-between; color: #7057e8; font-size: 11px; font-weight: 800; letter-spacing: .14em; }
+.credential-top button { border: 0; background: #f4f1fa; border-radius: 50%; width: 29px; height: 29px; color: #716b7d; font-size: 20px; line-height: 1; }
+#credential-dialog.one-time .credential-top button { display: none; }
+#credential-dialog h2 { margin: 26px 0 8px; font-size: 27px; letter-spacing: -.04em; }
+#credential-description,.credential-setup-intro,.credential-setup-note { color: #746e7e; font-size: 14px; line-height: 1.6; }
+#credential-secret-area { margin-top: 25px; padding: 22px; border: 1px solid #e8e4ee; border-radius: 12px; background: #faf9fd; }
+#credential-secret-area label { margin: 0 0 11px; font-size: 12px; }
+.credential-value-row { display: flex; gap: 8px; align-items: center; }
+.credential-value-row input { margin: 0; min-width: 0; height: 45px; font-family: Consolas, monospace; font-size: 13px; background: #fff; }
+.credential-value-row .button { height: 45px; }
+.credential-status { min-height: 19px; margin: 10px 0 0; color: #7057e8; font-size: 12px; }
+#credential-setup { margin-top: 28px; padding-top: 23px; border-top: 1px solid #e8e4ee; }
+.credential-setup-intro { margin: 0 0 18px; }
+.credential-methods { display: flex; gap: 7px; margin-bottom: 12px; }
+.credential-methods { flex-wrap: wrap; }
+.credential-setup-note a { color: #624ac8; font-weight: 700; }
+.credential-methods button { border: 1px solid #e3deeb; border-radius: 7px; padding: 10px 14px; background: #fff; color: #756e80; font-size: 12px; font-weight: 700; }
+.credential-methods button.active { border-color: #7057e8; color: #5943c8; background: #f3f0ff; }
+#credential-command { margin: 0 0 13px; padding: 18px; overflow-x: auto; border-radius: 10px; background: #24202f; color: #f4efff; font: 12px/1.65 Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.credential-check { margin-top: 20px; padding: 18px; border: 1px solid #e9e4f4; border-radius: 10px; background: #f8f6ff; }
+.credential-check strong { display: block; font-size: 14px; }
+.credential-check p { margin: 7px 0 13px; color: #625b70; font-size: 13px; line-height: 1.55; }
+.credential-check code { color: #5c45c8; }
+#credential-connection-status { display: inline-block; margin-left: 12px; color: #685f78; font-size: 12px; }
+#credential-rotate-agent { margin-top: 13px; }
+.credential-bottom { display: flex; justify-content: flex-end; margin-top: 23px; padding-top: 20px; border-top: 1px solid #eeeaf2; }
+.agent-connection-state { color: #857c93; font-size: 11px; font-weight: 650; white-space: nowrap; }
+.agent-connection-state.seen { color: #5d4bc0; }
+.agent-setup-button { border: 1px solid #ded8ed; border-radius: 7px; padding: 8px 12px; background: #fff; color: #5943c8; font-size: 11px; font-weight: 750; white-space: nowrap; }
+@media (max-width: 600px) { #credential-dialog .credential-shell { padding: 22px; } .credential-value-row { flex-wrap: wrap; } .credential-value-row input { flex-basis: 100%; } .agent-row { flex-wrap: wrap; } }

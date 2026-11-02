@@ -19,6 +19,11 @@ const statusTool = {
   description: 'Check the outcome of an AUVEN chat request that is waiting for workspace owner approval. Only the agent that submitted it can read the result.',
   inputSchema: {type: 'object', properties: {action_id: {type: 'string', pattern: '^[a-f0-9]{32}$'}}, required: ['action_id'], additionalProperties: false}
 };
+const connectionTool = {
+  name: 'auven_connection_test',
+  description: 'Verify this MCP client can authenticate as its registered AUVEN agent. Records a connection check without calling OpenAI or using the agent budget.',
+  inputSchema: {type: 'object', properties: {}, additionalProperties: false}
+};
 
 function reply(res, status, data) {
   res.writeHead(status, {'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store'});
@@ -53,8 +58,13 @@ async function handle(req, res, {db, callGateway, actionStatus}) {
   const id = message.id;
   if (message.method === 'initialize') return rpc(res, id, {protocolVersion, capabilities: {tools: {}}, serverInfo: {name: 'auven', version: '1.0.0'}});
   if (message.method === 'ping') return rpc(res, id, {});
-  if (message.method === 'tools/list') return rpc(res, id, {tools: [tool, statusTool]});
+  if (message.method === 'tools/list') return rpc(res, id, {tools: [connectionTool, tool, statusTool]});
   if (message.method !== 'tools/call') return error(res, id, -32601, 'Method not found');
+  if (message.params?.name === connectionTool.name) {
+    if(message.params.arguments && (typeof message.params.arguments !== 'object' || Array.isArray(message.params.arguments) || Object.keys(message.params.arguments).length)) return error(res,id,-32602,'Invalid tool arguments');
+    const seen=await db.markMcpConnection(agent.id);
+    return rpc(res,id,{content:[{type:'text',text:`Connected to AUVEN as ${agent.name} (${agent.id}). Status: ${agent.status}. Check recorded at ${seen}. This test did not call OpenAI or use the agent budget.`}]});
+  }
   if (message.params?.name === statusTool.name) {
     const actionId=message.params.arguments?.action_id;
     if(typeof actionId!=='string'||!/^[a-f0-9]{32}$/.test(actionId))return error(res,id,-32602,'Invalid action ID');
@@ -72,4 +82,4 @@ async function handle(req, res, {db, callGateway, actionStatus}) {
   const answer = outcome.data.result?.choices?.[0]?.message?.content;
   return rpc(res, id, {content: [{type: 'text', text: `${typeof answer === 'string' ? answer : JSON.stringify(outcome.data.result)}\n\nAUVEN event: ${outcome.data.event_id}`}]});
 }
-module.exports = {handle, tool, statusTool};
+module.exports = {handle, tool, statusTool, connectionTool};

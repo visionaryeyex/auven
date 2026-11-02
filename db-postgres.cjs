@@ -10,6 +10,7 @@ function ensureSchema(){
     try{
       await client.query('BEGIN');
       await client.query("SELECT pg_advisory_xact_lock(46630001)");
+      await client.query('ALTER TABLE agents ADD COLUMN IF NOT EXISTS mcp_last_seen timestamptz');
       const column=(await client.query("SELECT column_default,is_nullable FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='proofs' AND column_name='chain_network'")).rows[0];
       const constraint=(await client.query("SELECT 1 FROM pg_constraint WHERE conname='account_wallets_lowercase' AND conrelid='account_wallets'::regclass")).rowCount;
       if(!column || column.column_default!=="'solana'::text" || column.is_nullable!=='NO' || constraint){
@@ -33,7 +34,9 @@ async function agentByToken(token){return token?one('SELECT * FROM agents WHERE 
 async function countWorkspaces(){return Number((await one('SELECT COUNT(*) AS n FROM workspaces')).n)}
 async function createWorkspace(name){const token=secret(),row={id:id(),name};await run('INSERT INTO workspaces(id,name,admin_hash) VALUES($1,$2,$3)',[row.id,name,hash(token)]);return {...row,admin_token:token}}
 async function createAgent(workspaceId,name,purpose,dailyLimit){const token=secret(),row={id:id(),workspace_id:workspaceId,name,purpose,status:'active',daily_limit:dailyLimit,created_at:new Date().toISOString()};await run('INSERT INTO agents(id,workspace_id,name,purpose,status,daily_limit,credential_hash,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[row.id,workspaceId,name,purpose,row.status,dailyLimit,hash(token),row.created_at]);return {...row,credential:token}}
-async function listAgents(w){return many('SELECT id,workspace_id,name,purpose,status,daily_limit,daily_request_limit,max_tokens_per_request,approval_required,created_at FROM agents WHERE workspace_id=$1 ORDER BY created_at DESC',[w])}
+async function listAgents(w){return many('SELECT a.id,a.workspace_id,a.name,a.purpose,a.status,a.daily_limit,a.daily_request_limit,a.max_tokens_per_request,a.approval_required,a.mcp_last_seen,a.created_at,EXISTS(SELECT 1 FROM events e WHERE e.agent_id=a.id) AS has_gateway_activity FROM agents a WHERE a.workspace_id=$1 ORDER BY a.created_at DESC',[w])}
+async function markMcpConnection(a){const seen=new Date().toISOString();await run('UPDATE agents SET mcp_last_seen=$1 WHERE id=$2',[seen,a]);return seen}
+async function rotateAgentCredential(w,a){const token=secret();return await run('UPDATE agents SET credential_hash=$1,mcp_last_seen=NULL WHERE workspace_id=$2 AND id=$3',[hash(token),w,a])?token:null}
 async function setAgentPolicy(w,a,p){return run('UPDATE agents SET daily_limit=$1,daily_request_limit=$2,max_tokens_per_request=$3,approval_required=$4 WHERE workspace_id=$5 AND id=$6',[p.daily_limit_cents,p.daily_request_limit,p.max_tokens_per_request,p.approval_required,w,a])}
 async function setAgentStatus(w,a,s){return run('UPDATE agents SET status=$1 WHERE workspace_id=$2 AND id=$3',[s,w,a])}
 async function listEvents(w){return many('SELECT * FROM events WHERE workspace_id=$1 ORDER BY created_at DESC LIMIT 100',[w])}
@@ -68,4 +71,4 @@ async function claimProof(w,id){return run("UPDATE proofs SET chain_status='publ
 async function updateProof(id,status,txHash=null,signer=null,target=null,network=null){return run('UPDATE proofs SET chain_status=$1,tx_hash=COALESCE($2,tx_hash),chain_signer=COALESCE($3,chain_signer),chain_target=COALESCE($4,chain_target),chain_network=COALESCE($5,chain_network) WHERE id=$6',[status,txHash,signer,target,network,id])}
 async function agentOwned(w,a){return !!await one('SELECT id FROM agents WHERE id=$1 AND workspace_id=$2',[a,w])}
 async function checkpointEvents(a){return many('SELECT id,decision,reason,reserved,actual,created_at FROM events WHERE agent_id=$1 ORDER BY created_at,id',[a])}
-module.exports={pool,ensureSchema,hash,id,workspace,agentByToken,countWorkspaces,createWorkspace,createAgent,listAgents,setAgentStatus,setAgentPolicy,listEvents,reserve,settle,createProof,listProofs,getProof,claimProof,updateProof,agentOwned,checkpointEvents,listActions,actionForAgent,claimAction,denyAction,finishAction};
+module.exports={pool,ensureSchema,hash,id,workspace,agentByToken,countWorkspaces,createWorkspace,createAgent,listAgents,markMcpConnection,rotateAgentCredential,setAgentStatus,setAgentPolicy,listEvents,reserve,settle,createProof,listProofs,getProof,claimProof,updateProof,agentOwned,checkpointEvents,listActions,actionForAgent,claimAction,denyAction,finishAction};
