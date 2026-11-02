@@ -52,7 +52,10 @@ const ready = (async () => {
       appId: config.appId,
       config: {
         loginMethods: ['email', 'wallet'],
-        appearance: { theme: 'light', accentColor: '#7457ef', walletChainType: 'solana-only' },
+        appearance: {
+          theme: 'light', accentColor: '#7457ef', walletChainType: 'solana-only',
+          walletList: ['detected_solana_wallets', 'backpack', 'phantom', 'solflare', 'wallet_connect_qr_solana']
+        },
         embeddedWallets: { ethereum: { createOnLogin: 'off' }, solana: { createOnLogin: 'off' } }
       }
     }, React.createElement(Bridge)));
@@ -88,7 +91,6 @@ function assertBridge() {
 
 async function emailLogin() { assertBridge().login({ loginMethods: ['email'] }); }
 async function walletSignIn() { assertBridge().login({ loginMethods: ['wallet'], walletChainType: 'solana-only' }); }
-async function legacyWalletSignIn() { assertBridge().login({ loginMethods: ['wallet'], walletChainType: 'ethereum-only' }); }
 async function linkWallet() { assertBridge().linkWallet({ walletChainType: 'solana-only' }); }
 async function addEmail() { assertBridge().linkEmail(); }
 async function signOut() {
@@ -100,5 +102,5 @@ async function signOut() {
 window.auvenAuth = {
   ready, enabled: () => Boolean(config.enabled && bridge?.ready),
   signedIn: () => Boolean(bridge?.authenticated), accessToken,
-  emailLogin, walletSignIn, legacyWalletSignIn, linkWallet, addEmail, signOut
+  emailLogin, walletSignIn, linkWallet, addEmail, signOut
 };

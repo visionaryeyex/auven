@@ -6,18 +6,16 @@ process.env.AUVEN_PRIVY_APP_ID = 'test-app-id';
 process.env.AUVEN_PRIVY_APP_SECRET = 'test-secret';
 const Auth = require('../auth.cjs');
 
-const address = '0x1234567890123456789012345678901234567890';
 const solana = Keypair.generate().publicKey.toBase58();
 
-test('Privy identities keep Solana wallet case and preserve legacy access', () => {
+test('Privy identities accept only verified email and Solana wallets', () => {
   assert.deepEqual(Auth.identities({ linkedAccounts: [
     { type: 'email', address: 'test@example.com' },
-    { type: 'wallet', chainType: 'ethereum', address },
+    { type: 'wallet', chainType: 'ethereum', address: '0x1234567890123456789012345678901234567890' },
     { type: 'wallet', chainType: 'solana', address: solana },
-    { type: 'wallet', chainType: 'solana', address: 'solana-address' },
-    { type: 'wallet', chainType: 'ethereum', address: 'bad-address' }
-  ] }), { email: 'test@example.com', wallets: [solana], legacyWallets: [address] });
-  assert.deepEqual(Auth.identities({ linkedAccounts: [] }), { email: null, wallets: [], legacyWallets: [] });
+    { type: 'wallet', chainType: 'solana', address: 'solana-address' }
+  ] }), { email: 'test@example.com', wallets: [solana] });
+  assert.deepEqual(Auth.identities({ linkedAccounts: [] }), { email: null, wallets: [] });
 });
 
 test('public auth config never exposes the Privy app secret', () => {
@@ -28,6 +26,16 @@ test('public auth config never exposes the Privy app secret', () => {
 test('server rejects missing and malformed identity tokens before any Privy request', async () => {
   assert.equal(await Auth.userFromToken(''), null);
   assert.equal(await Auth.userFromToken('not-a-jwt'), null);
+});
+
+test('wallet-only sign-in accepts Solana and rejects Ethereum identities', async () => {
+  const sdk = user => ({ users: () => ({ get: async () => user }) });
+  assert.deepEqual(await Auth.userFromToken('header.payload.signature', sdk({ id: 'did:privy:sol123', linked_accounts: [
+    { type: 'wallet', chain_type: 'solana', address: solana }
+  ] })), { id: 'did:privy:sol123', email: null, wallets: [solana] });
+  assert.equal(await Auth.userFromToken('header.payload.signature', sdk({ id: 'did:privy:evm123', linked_accounts: [
+    { type: 'wallet', chain_type: 'ethereum', address: '0x1234567890123456789012345678901234567890' }
+  ] })), null);
 });
 
 test('access token fallback verifies the session before loading linked accounts', async () => {
@@ -42,7 +50,7 @@ test('access token fallback verifies the session before loading linked accounts'
     }) })
   };
   assert.deepEqual(await Auth.userFromToken('header.payload.signature', sdk), {
-    id: 'did:privy:abc123', email: 'test@example.com', wallets: [], legacyWallets: []
+    id: 'did:privy:abc123', email: 'test@example.com', wallets: []
   });
   assert.deepEqual(calls, ['identity', 'verify', 'lookup:did:privy:abc123']);
 });

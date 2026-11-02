@@ -6,7 +6,7 @@ AUVEN controls requests from agents you run in your own application. It currentl
 
 Open [AUVEN](https://auven.xyz) and choose **Open workspace**. Sign in with an email code or a Solana wallet through Privy. Create a workspace when prompted. Save the admin token shown once; it is a recovery and API credential.
 
-In **Profile**, you can link a Solana wallet to an email account or link an email to a wallet account. Do this while signed in so both methods stay on the same Privy profile and workspace. An older account that used only an EVM wallet can use **Existing EVM account? Sign in to link Solana**, then link a Solana wallet from Profile. Existing signed proofs are not changed by wallet linking.
+In **Profile**, you can link a Solana wallet to an email account or link an email to a wallet account. Do this while signed in so both methods stay on the same Privy profile and workspace. Existing signed proofs are not changed by wallet linking.
 
 ## Connect an agent
 

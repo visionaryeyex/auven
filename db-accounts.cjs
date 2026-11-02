@@ -13,7 +13,7 @@ async function resolveAccount(user) {
     if (current.rows[0]) { await client.query('COMMIT'); return current.rows[0].account_id; }
 
     let accountId;
-    const addresses = [...(user.wallets || []), ...(user.legacyWallets || [])];
+    const addresses = user.wallets || [];
     if (addresses.length) {
       const linked = await client.query('SELECT account_id FROM account_wallets WHERE address=ANY($1) LIMIT 1', [addresses]);
       accountId = linked.rows[0]?.account_id;

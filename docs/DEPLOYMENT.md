@@ -12,9 +12,9 @@ After deployment, `/api/ready` must return `{"ok":true,"database":"ready"}`. A s
 
 ## 2. Privy
 
-Use the existing AUVEN app in [Privy Dashboard](https://dashboard.privy.io/). Keep **Email** login enabled. In **User management → Authentication → Wallets**, enable Solana wallets, including the external wallet options you want users to see. Keep the existing EVM login option during migration if any account was created with an EVM wallet only; AUVEN exposes a separate legacy sign-in path so the owner can enter the same Privy account and link a Solana wallet. Do not create a second Privy app, since that would give existing users new Privy IDs and separate workspaces.
+Use the existing AUVEN app in [Privy Dashboard](https://dashboard.privy.io/). Keep **Email** login enabled. In **User management → Authentication → Wallets**, enable Solana wallets, including Backpack if you want it offered to users. Do not create a second Privy app, since that would give existing users new Privy IDs and separate workspaces.
 
-Keep the production domain in Allowed origins. Leave **Return user data in an identity token** enabled if available. AUVEN verifies Privy tokens on the server and reads linked Solana addresses only from the verified user record. The frontend filters normal wallet login and linking to Solana; legacy EVM login is offered only for account recovery during migration.
+Keep the production domain in Allowed origins. Leave **Return user data in an identity token** enabled if available. AUVEN verifies Privy tokens on the server and reads linked Solana addresses only from the verified user record. The frontend offers Solana wallet login and linking.
 
 The existing `AUVEN_PRIVY_APP_ID` and `AUVEN_PRIVY_APP_SECRET` remain unchanged. No new Privy secret is needed. Email sign-in still uses Privy's code.
 
@@ -53,7 +53,6 @@ The $AUVEN Solana mint is `DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump`. It is 
 1. Run `npm ci`, `npm run build`, and `npm test`.
 2. Confirm `/api/ready` on the production domain after applying the schema.
 3. Sign in through Privy with an email account, link a Solana wallet from **Profile**, and confirm the same workspace remains accessible after refresh.
-4. If you have an older wallet-only account, use the legacy EVM sign-in option and link a Solana wallet while signed in.
 5. Register an agent; check policy limits, owner approval, MCP status, Activity, export, and local ML-DSA verification.
 6. With the funded Solana publisher configured, publish one proof and verify the commitment through the UI and Explorer.
 7. Check the $AUVEN balance of a linked wallet and create one holder proof. Do not advertise holder benefits, payments, or burns as active.
