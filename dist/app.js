@@ -55,7 +55,7 @@ function renderAccess(page){
       content.querySelector('#auth-signout').onclick=async()=>{await window.auvenAuth.signOut();render(page)};
       return;
     }
-    renderGuide(page,`<div class="guide-auth-head"><span>01 / ACCOUNT</span><h2>Create an account or sign in</h2><p>Use an email code or connect a Solana wallet. Privy keeps both methods on one profile when you link them.</p></div><button class="button dark" type="button" id="email-login">Continue with email</button><div class="guide-divider"><span>OR</span></div><button class="button outline" type="button" id="wallet-login">Continue with Solana wallet</button><p class="subtle" id="auth-message" role="status"></p>`,'account');
+    renderGuide(page,`<div class="guide-auth-head"><span>01 / ACCOUNT</span><h2>Create an account or sign in</h2><p>Sign in with email or a Solana wallet. Already have an email account? Use email first, then link your wallet in Profile.</p></div><button class="button dark" type="button" id="email-login">Continue with email</button><div class="guide-divider"><span>OR</span></div><button class="button outline" type="button" id="wallet-login">Continue with Solana wallet</button><p class="subtle" id="auth-message" role="status"></p>`,'account');
     const message=content.querySelector('#auth-message');
     content.querySelector('#email-login').onclick=async()=>{try{await window.auvenAuth.emailLogin()}catch(error){message.textContent=error.message}};
     content.querySelector('#wallet-login').onclick=async()=>{try{await window.auvenAuth.walletSignIn()}catch(error){message.textContent=error.message}};
