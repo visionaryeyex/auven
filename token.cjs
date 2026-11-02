@@ -2,7 +2,7 @@ const { PublicKey } = require('@solana/web3.js');
 
 const GENESIS = '5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d';
 const RPC_URL = process.env.AUVEN_SOLANA_RPC_URL || 'https://api.mainnet.solana.com';
-const MINT = process.env.AUVEN_SOLANA_TOKEN_MINT || '';
+const MINT = process.env.AUVEN_SOLANA_TOKEN_MINT || 'DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump';
 
 function address(value) {
   try { const key = new PublicKey(value); if (key.toBase58() === value) return value; } catch {}

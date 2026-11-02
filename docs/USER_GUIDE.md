@@ -58,7 +58,7 @@ Older published records remain verifiable through their original transaction. Th
 
 ## $AUVEN
 
-The Solana token mint is not configured yet. You can link a Solana wallet in **Profile**, but AUVEN will not display a token balance or issue a holder proof until the mint is confirmed. Agent identity, controls, and signed activity do not require the token. Token payments, holder benefits, buybacks, and burns are not active.
+The $AUVEN mint is `DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump` on Solana. Link a Solana wallet in **Profile**, then open **$AUVEN** to read its balance. If the wallet holds tokens, choose one of your registered agents and create an ML-DSA-65 signed holder proof. It records a balance at one observed slot and does not move or lock tokens. Agent identity, controls, and signed activity do not require the token. Token payments, holder benefits, buybacks, and burns are not active.
 
 ## Common errors
 
@@ -68,6 +68,6 @@ The Solana token mint is not configured yet. You can link a Solana wallet in **P
 | `workspace_not_found` | Create or claim your workspace. |
 | `provider_not_configured` | The operator must add the OpenAI API key. |
 | `chain_signer_not_configured` | Export your proof; Solana publication is not enabled yet. |
-| `token_mint_not_configured` | Wait for the confirmed Solana mint. |
+| `token_mint_not_configured` | The site operator must configure the confirmed mint. |
 | `wallet_not_linked` | Link a Solana wallet in Profile. |
 | `token_balance_required` | The linked wallet has no balance of the configured mint at the observed slot. |
