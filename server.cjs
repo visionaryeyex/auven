@@ -36,7 +36,7 @@ http.createServer((req, res) => {
     res.writeHead(308, {location: target + url.search});
     return res.end();
   }
-  const name = pathname === '/' ? 'index.html' : pathname === '/token' ? 'token.html' : pathname === '/demo' ? 'demo.html' : pathname.slice(1);
+  const name = pathname === '/' || /^\/workspace(?:\/[a-z]+)?$/.test(pathname) ? 'index.html' : pathname === '/token' ? 'token.html' : pathname === '/demo' ? 'demo.html' : pathname.slice(1);
   const contentType = files.get(name);
   if (!contentType) {
     res.writeHead(404);
