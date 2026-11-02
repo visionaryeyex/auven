@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PrivyProvider, usePrivy, useLogin, useLinkAccount, useIdentityToken } from '@privy-io/react-auth';
+import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
 
 let config = { enabled: false, network: 'solana' };
 let bridge = null;
@@ -54,8 +55,9 @@ const ready = (async () => {
         loginMethods: ['email', 'wallet'],
         appearance: {
           theme: 'light', accentColor: '#7457ef', walletChainType: 'solana-only',
-          walletList: ['detected_solana_wallets', 'backpack', 'phantom', 'solflare', 'wallet_connect_qr_solana']
+          walletList: ['detected_solana_wallets', 'wallet_connect_qr_solana']
         },
+        externalWallets: { solana: { connectors: toSolanaWalletConnectors() } },
         embeddedWallets: { ethereum: { createOnLogin: 'off' }, solana: { createOnLogin: 'off' } }
       }
     }, React.createElement(Bridge)));
