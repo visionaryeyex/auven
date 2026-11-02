@@ -1,6 +1,16 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const route = require('../api/route.js');
+
+test('workspace deep links rewrite to the clean root page', () => {
+  const config = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'vercel.json'), 'utf8'));
+  assert.equal(config.cleanUrls, true);
+  for (const source of ['/workspace', '/workspace/:section']) {
+    assert.deepEqual(config.rewrites.find(item => item.source === source), { source, destination: '/' });
+  }
+});
 
 test('Vercel rewrite reaches nested auth and readiness routes', async () => {
   for (const [path, status, key] of [
