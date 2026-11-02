@@ -1,11 +1,12 @@
 const fs = require('node:fs');
 const { createHash } = require('node:crypto');
-const { verifyInclusion } = require('./chain.cjs');
+const Solana = require('./solana.cjs');
+const Legacy = require('./chain.cjs');
 
 async function main() {
   const [file, tx, publisher, registry] = process.argv.slice(2);
   if (!file) {
-    console.error('Usage: node verify.cjs proof.json [chain-transaction-hash] [trusted-publisher-address] [registry-address]');
+    console.error('Usage: node verify.cjs proof.json [transaction-signature] [trusted-publisher] [legacy-registry-address]');
     process.exitCode = 2;
     return;
   }
@@ -18,7 +19,9 @@ async function main() {
     if (digest !== proof.digest || !ml_dsa65.verify(Buffer.from(proof.signature, 'base64'), bytes, Buffer.from(proof.public_key, 'base64'))) throw Error('invalid_signature');
     if (tx && !publisher) throw Error('trusted_publisher_required');
     const inclusion = tx
-      ? await verifyInclusion(proof, tx, { expectedSigner: publisher, expectedTarget: registry || publisher })
+      ? /^0x[0-9a-fA-F]{64}$/.test(tx)
+        ? await Legacy.verifyInclusion(proof, tx, { expectedSigner: publisher, expectedTarget: registry || publisher })
+        : await Solana.verifyInclusion(proof, tx, { expectedSigner: publisher })
       : { included: false, reason: 'transaction_not_provided' };
     console.log(JSON.stringify({ signature_valid: true, onchain: inclusion, meaning: 'Signature, trusted publisher, and onchain inclusion are separate checks.' }));
     if (tx && !inclusion.included) process.exitCode = 1;

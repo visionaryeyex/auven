@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 500" role="img" aria-labelledby="title desc">
+  <title id="title">AUVEN</title>
+  <desc id="desc">Control for AI agents. Verifiable activity.</desc>
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fff"/>
+      <stop offset="1" stop-color="#f6f4ff"/>
+    </linearGradient>
+    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#967fff"/>
+      <stop offset="1" stop-color="#5b42d1"/>
+    </linearGradient>
+    <mask id="cut"><rect width="1024" height="1024" fill="#fff"/><path d="M512 475 612 575 512 675 412 575Z" fill="#000"/></mask>
+    <clipPath id="frame"><rect x="1" y="1" width="1498" height="498" rx="24"/></clipPath>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="1500" height="500" fill="url(#paper)"/>
+    <path d="M0 82h1500M0 418h1500" stroke="#e9e6f3"/>
+    <path d="M1050-85 1590 455M995 6l540 540M1120-180l540 540" stroke="#e7e1ff" stroke-width="2"/>
+    <circle cx="1198" cy="246" r="247" fill="none" stroke="#ddd5ff" stroke-width="2"/>
+    <circle cx="1198" cy="246" r="167" fill="none" stroke="#ddd5ff" stroke-width="2"/>
+    <circle cx="1198" cy="246" r="84" fill="#f0ebff"/>
+    <path d="M1040 246h316M1198 88v316" stroke="#d7cdff" stroke-width="2"/>
+    <g transform="translate(1048 100) scale(.29)" fill="url(#violet)" mask="url(#cut)">
+      <path d="M512 190 824 790H715L512 393 309 790H200Z"/>
+      <path d="M357 536H667V614H357Z"/>
+    </g>
+    <path d="M1198 244 1215 261 1198 278 1181 261Z" fill="#7057e8"/>
+    <path d="M1198 251 1188 261 1198 271 1208 261Z" fill="#fff"/>
+    <text x="94" y="139" fill="#7057e8" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="25" letter-spacing="7">AUVEN</text>
+    <text x="94" y="242" fill="#24202f" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="62" letter-spacing="-3">Control what agents do.</text>
+    <text x="94" y="314" fill="#24202f" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="62" letter-spacing="-3">Verify what happened.</text>
+    <text x="96" y="390" fill="#6e687d" font-family="Arial,Helvetica,sans-serif" font-size="22" letter-spacing=".4">Identity  /  Policy  /  Signed proofs</text>
+    <circle cx="94" cy="62" r="5" fill="#7057e8"/>
+    <text x="113" y="69" fill="#89839a" font-family="Arial,Helvetica,sans-serif" font-size="14" letter-spacing="2.5">AGENT TRUST INFRASTRUCTURE</text>
+  </g>
+  <rect x="1" y="1" width="1498" height="498" rx="24" fill="none" stroke="#e9e6f3" stroke-width="2"/>
+</svg>

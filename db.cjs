@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS proofs(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL
 for(const [name,type] of [['daily_request_limit','INTEGER NOT NULL DEFAULT 100'],['max_tokens_per_request','INTEGER NOT NULL DEFAULT 4096'],['approval_required','INTEGER NOT NULL DEFAULT 0']]){
   if(!db.prepare('PRAGMA table_info(agents)').all().some(c=>c.name===name))db.exec(`ALTER TABLE agents ADD COLUMN ${name} ${type}`);
 }
-for(const [name,type] of [['chain_status','TEXT'],['chain_signer','TEXT'],['chain_target','TEXT']]){
+for(const [name,type] of [['chain_status','TEXT'],['chain_signer','TEXT'],['chain_target','TEXT'],['chain_network',"TEXT NOT NULL DEFAULT 'robinhood'"]]){
   if(!db.prepare('PRAGMA table_info(proofs)').all().some(c=>c.name===name))db.exec(`ALTER TABLE proofs ADD COLUMN ${name} ${type}`);
 }
 const hash=s=>createHash('sha256').update(s).digest('hex');
@@ -55,11 +55,11 @@ function denyAction(workspaceId,actionId){db.exec('BEGIN IMMEDIATE');try{const a
 function finishAction(actionId,status,result,actual){db.exec('BEGIN IMMEDIATE');try{const action=db.prepare("SELECT event_id FROM action_requests WHERE id=? AND status='processing'").get(actionId);if(!action){db.exec('COMMIT');return false}db.prepare('UPDATE action_requests SET status=?,result_json=?,messages_json=? WHERE id=?').run(status,JSON.stringify(result),'[]',actionId);db.prepare('UPDATE events SET decision=?,reason=?,actual=?,reserved=? WHERE id=?').run(status==='completed'?'allowed':'failed',status==='completed'?'provider_completed':'provider_error',actual,status==='completed'?actual:0,action.event_id);db.exec('COMMIT');return true}catch(e){db.exec('ROLLBACK');throw e}}
 function settle(eventId,decision,reason,actual){db.prepare('UPDATE events SET decision=?,reason=?,actual=? WHERE id=?').run(decision,reason,actual,eventId)}
 function countWorkspaces(){return db.prepare('SELECT COUNT(*) n FROM workspaces').get().n}
-function createProof(workspaceId,agentId,kind,proof){const proofId=id();db.prepare('INSERT INTO proofs(id,workspace_id,agent_id,kind,payload,signature,public_key,created_at) VALUES(?,?,?,?,?,?,?,?)').run(proofId,workspaceId,agentId,kind,JSON.stringify(proof),proof.signature,proof.public_key,new Date().toISOString());return proofId}
-function listProofs(workspaceId){return db.prepare('SELECT id,agent_id,kind,payload,created_at,tx_hash,chain_status,chain_signer,chain_target FROM proofs WHERE workspace_id=? ORDER BY created_at DESC').all(workspaceId)}
+function createProof(workspaceId,agentId,kind,proof){const proofId=id();db.prepare('INSERT INTO proofs(id,workspace_id,agent_id,kind,payload,signature,public_key,created_at,chain_network) VALUES(?,?,?,?,?,?,?,?,?)').run(proofId,workspaceId,agentId,kind,JSON.stringify(proof),proof.signature,proof.public_key,new Date().toISOString(),'solana');return proofId}
+function listProofs(workspaceId){return db.prepare('SELECT id,agent_id,kind,payload,created_at,tx_hash,chain_status,chain_signer,chain_target,chain_network FROM proofs WHERE workspace_id=? ORDER BY created_at DESC').all(workspaceId)}
 function getProof(workspaceId,proofId){return db.prepare('SELECT * FROM proofs WHERE id=? AND workspace_id=?').get(proofId,workspaceId)}
 function claimProof(workspaceId,proofId){return db.prepare("UPDATE proofs SET chain_status='publishing' WHERE id=? AND workspace_id=? AND chain_status IS NULL AND tx_hash IS NULL").run(proofId,workspaceId).changes}
-function updateProof(proofId,status,txHash=null,signer=null,target=null){db.prepare('UPDATE proofs SET chain_status=?,tx_hash=COALESCE(?,tx_hash),chain_signer=COALESCE(?,chain_signer),chain_target=COALESCE(?,chain_target) WHERE id=?').run(status,txHash,signer,target,proofId)}
+function updateProof(proofId,status,txHash=null,signer=null,target=null,network=null){db.prepare('UPDATE proofs SET chain_status=?,tx_hash=COALESCE(?,tx_hash),chain_signer=COALESCE(?,chain_signer),chain_target=COALESCE(?,chain_target),chain_network=COALESCE(?,chain_network) WHERE id=?').run(status,txHash,signer,target,network,proofId)}
 function agentOwned(workspaceId,agentId){return !!db.prepare('SELECT id FROM agents WHERE id=? AND workspace_id=?').get(agentId,workspaceId)}
 function checkpointEvents(agentId){return db.prepare('SELECT id,decision,reason,reserved,actual,created_at FROM events WHERE agent_id=? ORDER BY created_at,id').all(agentId)}
 module.exports={db,dir,hash,workspace,agentByToken,createWorkspace,createAgent,listAgents,setAgentStatus,setAgentPolicy,listEvents,reserve,settle,id,countWorkspaces,createProof,listProofs,getProof,claimProof,updateProof,agentOwned,checkpointEvents,listActions,actionForAgent,claimAction,denyAction,finishAction};

@@ -61,4 +61,4 @@ After a 202 response, check `GET /api/actions/ACTION_ID` with the same agent cre
 
 The workspace owner can stop or resume the agent and inspect **Activity**. A signed passport is created when the agent is registered. An activity checkpoint is created with `POST /api/checkpoints` and `{"agent_id":"AGENT_ID"}` using a workspace session or admin token. The resulting proof can be exported and checked with `node verify.cjs proof.json`.
 
-Publishing a proof commitment to Robinhood Chain is a separate owner action. It requires a funded backend signer, costs gas, and does not put the activity details or the ML-DSA signature onchain.
+Publishing a proof commitment on Solana is a separate owner action. It requires a funded backend signer, costs a transaction fee, and does not put the activity details or the ML-DSA signature onchain.

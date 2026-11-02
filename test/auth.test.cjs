@@ -1,24 +1,27 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const { Keypair } = require('@solana/web3.js');
 
 process.env.AUVEN_PRIVY_APP_ID = 'test-app-id';
 process.env.AUVEN_PRIVY_APP_SECRET = 'test-secret';
 const Auth = require('../auth.cjs');
 
 const address = '0x1234567890123456789012345678901234567890';
+const solana = Keypair.generate().publicKey.toBase58();
 
-test('Privy identities include only verified EVM wallet and email linked accounts', () => {
+test('Privy identities keep Solana wallet case and preserve legacy access', () => {
   assert.deepEqual(Auth.identities({ linkedAccounts: [
     { type: 'email', address: 'test@example.com' },
     { type: 'wallet', chainType: 'ethereum', address },
+    { type: 'wallet', chainType: 'solana', address: solana },
     { type: 'wallet', chainType: 'solana', address: 'solana-address' },
     { type: 'wallet', chainType: 'ethereum', address: 'bad-address' }
-  ] }), { email: 'test@example.com', wallets: [address] });
-  assert.deepEqual(Auth.identities({ linkedAccounts: [] }), { email: null, wallets: [] });
+  ] }), { email: 'test@example.com', wallets: [solana], legacyWallets: [address] });
+  assert.deepEqual(Auth.identities({ linkedAccounts: [] }), { email: null, wallets: [], legacyWallets: [] });
 });
 
 test('public auth config never exposes the Privy app secret', () => {
-  assert.deepEqual(Auth.publicConfig(), { enabled: true, appId: 'test-app-id', chainId: 4663 });
+  assert.deepEqual(Auth.publicConfig(), { enabled: true, appId: 'test-app-id', network: 'solana' });
   assert.equal(JSON.stringify(Auth.publicConfig()).includes('test-secret'), false);
 });
 
@@ -39,7 +42,7 @@ test('access token fallback verifies the session before loading linked accounts'
     }) })
   };
   assert.deepEqual(await Auth.userFromToken('header.payload.signature', sdk), {
-    id: 'did:privy:abc123', email: 'test@example.com', wallets: []
+    id: 'did:privy:abc123', email: 'test@example.com', wallets: [], legacyWallets: []
   });
   assert.deepEqual(calls, ['identity', 'verify', 'lookup:did:privy:abc123']);
 });

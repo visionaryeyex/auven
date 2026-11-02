@@ -8,6 +8,6 @@ outputs/
 .vercel/
 .openai/
 assets/*
-!assets/auven-x-banner.png
+!assets/auven-readme-banner.svg
 BRAND.md
 /launch-film/

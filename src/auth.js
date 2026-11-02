@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PrivyProvider, usePrivy, useLogin, useLinkAccount, useIdentityToken } from '@privy-io/react-auth';
-import { defineChain } from 'viem';
 
-let config = { enabled: false, chainId: 4663 };
+let config = { enabled: false, network: 'solana' };
 let bridge = null;
 let finishSdkReady;
 const sdkReady = new Promise(resolve => { finishSdkReady = resolve; });
@@ -46,13 +45,6 @@ const ready = (async () => {
     if (!response.ok) return;
     config = await response.json();
     if (!config.enabled) return;
-    const chain = defineChain({
-      id: config.chainId,
-      name: 'Robinhood Chain',
-      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-      rpcUrls: { default: { http: ['https://rpc.mainnet.chain.robinhood.com'] } },
-      blockExplorers: { default: { name: 'Robinhood Chain Explorer', url: 'https://robinhoodchain.blockscout.com' } }
-    });
     const root = document.createElement('div');
     root.id = 'privy-root';
     document.body.append(root);
@@ -60,10 +52,8 @@ const ready = (async () => {
       appId: config.appId,
       config: {
         loginMethods: ['email', 'wallet'],
-        appearance: { theme: 'light', accentColor: '#7457ef' },
-        defaultChain: chain,
-        supportedChains: [chain],
-        embeddedWallets: { ethereum: { createOnLogin: 'off' } }
+        appearance: { theme: 'light', accentColor: '#7457ef', walletChainType: 'solana-only' },
+        embeddedWallets: { ethereum: { createOnLogin: 'off' }, solana: { createOnLogin: 'off' } }
       }
     }, React.createElement(Bridge)));
     await Promise.race([
@@ -97,8 +87,9 @@ function assertBridge() {
 }
 
 async function emailLogin() { assertBridge().login({ loginMethods: ['email'] }); }
-async function walletSignIn() { assertBridge().login({ loginMethods: ['wallet'], walletChainType: 'ethereum-only' }); }
-async function linkWallet() { assertBridge().linkWallet(); }
+async function walletSignIn() { assertBridge().login({ loginMethods: ['wallet'], walletChainType: 'solana-only' }); }
+async function legacyWalletSignIn() { assertBridge().login({ loginMethods: ['wallet'], walletChainType: 'ethereum-only' }); }
+async function linkWallet() { assertBridge().linkWallet({ walletChainType: 'solana-only' }); }
 async function addEmail() { assertBridge().linkEmail(); }
 async function signOut() {
   fallbackToken = null;
@@ -109,5 +100,5 @@ async function signOut() {
 window.auvenAuth = {
   ready, enabled: () => Boolean(config.enabled && bridge?.ready),
   signedIn: () => Boolean(bridge?.authenticated), accessToken,
-  emailLogin, walletSignIn, linkWallet, addEmail, signOut
+  emailLogin, walletSignIn, legacyWalletSignIn, linkWallet, addEmail, signOut
 };

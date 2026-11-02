@@ -1,85 +1,59 @@
 # Deploy AUVEN
 
-This guide describes the current application, its Supabase project, and the production Vercel project. AUVEN can publish proof commitments in a transaction to the dedicated signer or through the included registry contract after it is deployed. The token is optional for core gateway use; a linked holder can create an agent holder proof.
+The hosted app uses Vercel, Supabase PostgreSQL, Privy, and an optional OpenAI gateway. Solana wallet sign-in is prepared in the app. Solana proof publication requires a separate funded signer and RPC; $AUVEN balance proofs require a confirmed token mint. Neither is implied by this code release.
 
-## 1. Supabase database
+## 1. Database
 
-The AUVEN Supabase project is in EU West. Its project reference is `ibgmxmwackefalnpjklp`.
+The existing AUVEN Supabase project remains the database. Keep `DATABASE_URL` in Vercel Production as a Sensitive variable using the Supabase Transaction pooler URI on port 6543. Never put it in browser code or Git.
 
-1. Open **Supabase → AUVEN → Connect → Transaction pooler**. Copy the complete URI on port **6543**. Replace `[YOUR-PASSWORD]` with the database password. Percent-encode reserved characters in the password. Copy the host and username from Supabase; do not construct them from the region.
-2. In **Vercel → auven-wxk9 → Settings → Environment Variables**, add the URI as `DATABASE_URL` for **Production**. Use the Sensitive type.
-3. Apply `db/schema.sql` with `npm run db:migrate` while `DATABASE_URL` is available locally, or run that exact SQL in the Supabase SQL Editor. The script is idempotent: it creates the agent tables, profile tables, wallet links, indexes, and access restrictions.
-4. Redeploy the production project. `GET /api/ready` must return `{"ok":true,"database":"ready"}`. `GET /api/health` only reports whether the variable exists; it does not test a connection.
+The server applies the narrow Solana compatibility migration on its first database-backed request, using the existing PostgreSQL owner connection. It removes the old lowercase-only wallet constraint, tags older published proofs for legacy verification, and defaults new proofs to Solana. The same changes are in [`db/schema.sql`](../db/schema.sql), which you can apply with `npm run db:migrate` from a trusted machine or in the Supabase SQL Editor. The existing tables and owner connection must already be present; browser roles still receive no table grants.
 
-The browser does not receive the database URI. AUVEN's server connects to PostgreSQL directly; its app tables have RLS enabled with no `anon` or `authenticated` grants.
+After deployment, `/api/ready` must return `{"ok":true,"database":"ready"}`. A successful `/api/health` response alone does not test the database.
 
-## 2. Privy authentication
+## 2. Privy
 
-Create an AUVEN application in the [Privy Dashboard](https://dashboard.privy.io/). In **User management → Authentication**, enable **Email** and **Wallet** login. In **Advanced**, enable **Return user data in an identity token** when available. AUVEN uses the signed identity token when Privy provides it; otherwise the server verifies the Privy access token and retrieves the user's linked accounts from Privy. Add the production domain and local development origin to the app's allowed origins. Set the app's name and purple appearance in Privy.
+Use the existing AUVEN app in [Privy Dashboard](https://dashboard.privy.io/). Keep **Email** login enabled. In **User management → Authentication → Wallets**, enable Solana wallets, including the external wallet options you want users to see. Keep the existing EVM login option during migration if any account was created with an EVM wallet only; AUVEN exposes a separate legacy sign-in path so the owner can enter the same Privy account and link a Solana wallet. Do not create a second Privy app, since that would give existing users new Privy IDs and separate workspaces.
 
-In **Configuration → App settings → Basics**, copy the app ID and generate a read-only server app secret. AUVEN uses it to verify Privy tokens and retrieve linked accounts; it does not use Privy wallet-management APIs. Add both to Vercel Production:
+Keep the production domain in Allowed origins. Leave **Return user data in an identity token** enabled if available. AUVEN verifies Privy tokens on the server and reads linked Solana addresses only from the verified user record. The frontend filters normal wallet login and linking to Solana; legacy EVM login is offered only for account recovery during migration.
 
-| Name | Value | Visibility |
-| --- | --- | --- |
-| `AUVEN_PRIVY_APP_ID` | Privy app ID | Public identifier served by `/api/auth/config` |
-| `AUVEN_PRIVY_APP_SECRET` | Privy app secret | Sensitive, server only |
-
-Privy sends an **email code**, not a Magic Link. The app presents Privy's email and EVM wallet login modal. The default and supported EVM network is Robinhood Chain (chain ID **4663**). A wallet can still decline a network switch during connection; check its network before any onchain transaction. Wallet login itself is an offchain signature and does not spend gas.
-
-In **Profile**, link an email to a wallet-first profile or link an EVM wallet to an email-first profile using Privy's account linking. Do this while signed in so both methods resolve to the same Privy user ID and AUVEN workspace. The backend never trusts a wallet address supplied by the browser; it reads linked accounts from a verified identity token or retrieves them from Privy after verifying an access token.
-
-The existing Supabase project remains the PostgreSQL database. Supabase Auth email, Web3, redirect URL, SMTP, URL and publishable-key settings are no longer used by AUVEN.
+The existing `AUVEN_PRIVY_APP_ID` and `AUVEN_PRIVY_APP_SECRET` remain unchanged. No new Privy secret is needed. Email sign-in still uses Privy's code.
 
 ## 3. Vercel Production variables
 
-The production project is **auven-wxk9**. Set variables for **Production**, then redeploy; changes do not affect an existing deployment.
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Supabase PostgreSQL connection |
+| `AUVEN_PRIVY_APP_ID` | Privy application ID, a public identifier |
+| `AUVEN_PRIVY_APP_SECRET` | Server verification and linked account lookup |
+| `AUVEN_SETUP_TOKEN` | Optional legacy admin-token workspace setup |
+| `AUVEN_PQ_SIGNING_SEED` | Stable ML-DSA-65 signing identity, 32 bytes as 64 hex characters |
+| `AUVEN_OPENAI_API_KEY` | Enables controlled OpenAI chat requests |
+| `AUVEN_MODEL` | Optional model override; defaults to `gpt-6.1-sol` |
+| `AUVEN_SOLANA_RPC_URL` | Dedicated Solana RPC for proof publication and future token balance reads |
+| `AUVEN_SOLANA_SECRET_KEY` | Dedicated proof publisher's 64-byte Solana secret key as a JSON number array; required for publication only |
+| `AUVEN_SOLANA_TOKEN_MINT` | Confirmed $AUVEN Solana mint; leave unset until it exists and is verified |
 
-| Variable | Needed for | Source |
-| --- | --- | --- |
-| `DATABASE_URL` | Every database-backed route | Supabase Transaction pooler URI, port 6543 |
-| `AUVEN_PRIVY_APP_ID` | Email and wallet sign-in | Privy app ID |
-| `AUVEN_PRIVY_APP_SECRET` | Server verification of Privy tokens and linked account lookup | Privy app secret |
-| `AUVEN_SETUP_TOKEN` | Legacy workspace bootstrap by admin token | 32 random bytes; already configured in the current Vercel project |
-| `AUVEN_PQ_SIGNING_SEED` | Stable ML-DSA-65 signing identity | 32 random bytes encoded as 64 hex characters; already configured |
-| `AUVEN_OPENAI_API_KEY` | Controlled OpenAI chat requests | OpenAI Platform project API key |
-| `AUVEN_MODEL` | Optional model override | Defaults to `gpt-6.1-sol` in code |
-| `AUVEN_RH_PRIVATE_KEY` | Onchain proof publication | Dedicated AUVEN backend wallet, funded with ETH on Robinhood Chain |
-| `AUVEN_RH_RPC_URL` | Onchain proof publication and server-side token balance reads | Robinhood Chain RPC provider endpoint; code has a public fallback |
-| `AUVEN_RH_REGISTRY_ADDRESS` | Optional registry mode | Deployed and verified `AuvenProofRegistry` address on chain 4663 |
+Keep server credentials Sensitive. The Solana RPC endpoint may itself contain a provider key, so keep it server-side. The Solana secret must belong to a new, dedicated wallet funded with enough SOL for transaction fees. Never use your personal wallet secret or a Privy user wallet secret.
 
-Keep `DATABASE_URL`, `AUVEN_PRIVY_APP_SECRET`, `AUVEN_SETUP_TOKEN`, `AUVEN_PQ_SIGNING_SEED`, `AUVEN_OPENAI_API_KEY`, and `AUVEN_RH_PRIVATE_KEY` as Sensitive server-side variables. The Privy app ID is a public identifier. Do not add a Supabase service role key, wallet seed phrase, or your personal wallet private key to this application. Remove the obsolete `AUVEN_SUPABASE_URL` and `AUVEN_SUPABASE_PUBLISHABLE_KEY` variables after Privy sign-in succeeds.
+The old `AUVEN_RH_PRIVATE_KEY`, `AUVEN_RH_RPC_URL`, and `AUVEN_RH_REGISTRY_ADDRESS` are not used for new publications. The old RPC can remain temporarily if you need to verify existing records, because the legacy verifier still reads it. Remove the old private key from Vercel after verifying that no old publication path uses it. Changing Vercel variables requires a redeploy.
 
-The PQ seed must be backed up securely. Replacing it changes the signing public key for future proofs.
+## 4. Solana proof publication
 
-## 4. OpenAI provider
+New publication uses a signed Solana transaction containing one Memo instruction. The memo holds an `AUVEN1` proof commitment, not the proof payload or its ML-DSA signature. AUVEN verifies the exported signature offchain and verifies the transaction, signer, exact memo, and Solana network separately. There is no new program to deploy for this path.
 
-Create a project API key in OpenAI Platform, enable billing for that project, and add it as `AUVEN_OPENAI_API_KEY` in Vercel Production. The agent never receives this key: it sends its AUVEN gateway credential to `/api/gateway/chat`, and the server calls the OpenAI Chat Completions API. Configure `AUVEN_MODEL` only if the chosen model supports this request shape and is available to the project.
+1. Provision a dedicated Solana RPC and set `AUVEN_SOLANA_RPC_URL` in Vercel.
+2. Create a dedicated Solana keypair on a trusted machine. Back up its secret securely. Put the 64-byte JSON secret array in `AUVEN_SOLANA_SECRET_KEY` as a Sensitive Vercel variable. Fund the corresponding public address with a small amount of SOL.
+3. Redeploy, create an activity checkpoint in AUVEN, and publish it from **Proofs**.
+4. Open the transaction in [Solana Explorer](https://explorer.solana.com/) and use **Verify** in AUVEN. A confirmed inclusion must report `included: true`.
 
-The current budget is an estimate based on `max_tokens`; it is not exact OpenAI billing. Test with a small daily limit and a small request before relying on the policy.
+Do not add `AUVEN_SOLANA_TOKEN_MINT` yet. When the Solana token exists, confirm the mint address independently, then set it in Vercel. AUVEN checks the RPC genesis hash before reading the mint. Holder proofs record the linked wallet, mint, raw balance, observed slot, and time; they are snapshots and do not lock tokens.
 
-## 5. Robinhood Chain
+## 5. Release check
 
-Use a **new dedicated backend signer wallet**, separate from the wallet you use to sign in to your profile. Add Robinhood Chain to the wallet: chain ID **4663**, currency **ETH**. Fund that address with a small amount of ETH on Robinhood Chain for gas. Put only its private key in Vercel as `AUVEN_RH_PRIVATE_KEY`. For a production RPC, set `AUVEN_RH_RPC_URL` to an endpoint from your infrastructure provider; the public Robinhood RPC is rate limited.
-
-The AUVEN registry was deployed at [`0xEAc2A9D6389ea558eF04191fC99b7AB94A90fc22`](https://robinhoodchain.blockscout.com/address/0xEAc2A9D6389ea558eF04191fC99b7AB94A90fc22) by publisher `0x3D47AcCc4D2d4C82ca75a6ae80A264665955Cbf4`. The [deployment transaction](https://robinhoodchain.blockscout.com/tx/0x55b020f047af499e5c46de1c17d7a41bc6a99ea3d06860fc465264e872148102) succeeded on chain 4663. Set this address as `AUVEN_RH_REGISTRY_ADDRESS`. The Vercel signer must be the same publisher, because the registry rejects any other caller.
-
-Publishing a proof is an actual chain transaction and costs gas. With no `AUVEN_RH_REGISTRY_ADDRESS`, AUVEN sends a zero-value transaction to its own signer address with `AUVEN1` and the proof commitment in calldata. To use the included proof registry:
-
-1. From a trusted machine, set `AUVEN_RH_PRIVATE_KEY` for the dedicated funded signer and `AUVEN_RH_RPC_URL` for a production RPC. Run `npm run contract:compile` and `npm run contract:deploy`. The deploy script refuses a chain other than 4663 and prints the contract address and deployment transaction.
-2. Check the deployed address, publisher and transaction on a Robinhood Chain explorer. The publisher is permanently set to the deploying signer. Keep that key available for publication and fund it for gas.
-3. Add the address to Vercel Production as `AUVEN_RH_REGISTRY_ADDRESS` and redeploy. New proofs go through the registry. Existing signer transactions remain verifiable because each proof record stores the original target.
-4. Publish one small proof and confirm `/api/proofs/:id/inclusion` returns `included: true`. The verifier checks the registry call and `ProofCommitted` event. For an exported proof, use `node verify.cjs proof.json TX_HASH TRUSTED_PUBLISHER REGISTRY_ADDRESS`.
-
-The ML-DSA signature is checked offchain by AUVEN's verifier; the contract records only the commitment. The $AUVEN ERC-20 contract is deployed separately at `0x6E6E172ad5d06f6cA79F9C9B355Fd8cDC2Afb64D`. The server reads `balanceOf` at a chain block for Privy-verified linked wallets; this read uses `AUVEN_RH_RPC_URL` and never exposes it in the browser. No token payment or burn contract is configured. Do not describe an onchain commitment as an onchain post-quantum signature check.
-
-## 6. Release check
-
-1. `npm ci`, `npm run build`, and `npm test` pass.
-2. `/api/ready` returns 200 on the production Vercel URL.
-3. An email code arrives at a non-team address; a new user enters it in Privy's modal and creates a workspace.
-4. An EVM wallet signs in. From an email profile, linking that wallet requires its signature; later wallet sign-in opens the same workspace. The default network is Robinhood Chain, chain ID 4663.
-5. Register an external agent, save its credential, stop and resume it, and confirm activity and signed passport appear.
-6. With an OpenAI key, send one small gateway request. Confirm duplicate idempotency keys and stopped agents are denied.
-7. Export a proof and verify it locally. After funding the backend signer, publish one proof and verify its onchain inclusion.
-
-Do not mark a step complete based only on environment variables being present. The user flow must pass against the hosted database and the actual external services.
+1. Run `npm ci`, `npm run build`, and `npm test`.
+2. Confirm `/api/ready` on the production domain after applying the schema.
+3. Sign in through Privy with an email account, link a Solana wallet from **Profile**, and confirm the same workspace remains accessible after refresh.
+4. If you have an older wallet-only account, use the legacy EVM sign-in option and link a Solana wallet while signed in.
+5. Register an agent; check policy limits, owner approval, MCP status, Activity, export, and local ML-DSA verification.
+6. With the funded Solana publisher configured, publish one proof and verify the commitment through the UI and Explorer.
+7. Keep the token status as *in preparation* until a confirmed mint exists. Do not advertise holder benefits, payments, or burns as active.

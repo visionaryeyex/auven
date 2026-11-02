@@ -13,8 +13,9 @@ async function resolveAccount(user) {
     if (current.rows[0]) { await client.query('COMMIT'); return current.rows[0].account_id; }
 
     let accountId;
-    if (user.wallets?.length) {
-      const linked = await client.query('SELECT account_id FROM account_wallets WHERE address=ANY($1) LIMIT 1', [user.wallets]);
+    const addresses = [...(user.wallets || []), ...(user.legacyWallets || [])];
+    if (addresses.length) {
+      const linked = await client.query('SELECT account_id FROM account_wallets WHERE address=ANY($1) LIMIT 1', [addresses]);
       accountId = linked.rows[0]?.account_id;
     }
     if (!accountId) {
@@ -23,7 +24,7 @@ async function resolveAccount(user) {
     }
     await client.query('INSERT INTO account_privy_users(privy_user_id,account_id) VALUES($1,$2) ON CONFLICT (privy_user_id) DO NOTHING', [user.id, accountId]);
     const result = await client.query('SELECT account_id FROM account_privy_users WHERE privy_user_id=$1', [user.id]);
-    for (const address of user.wallets || []) await client.query(
+    for (const address of addresses) await client.query(
       'INSERT INTO account_wallets(address,account_id) VALUES($1,$2) ON CONFLICT (address) DO NOTHING',
       [address, result.rows[0].account_id]
     );

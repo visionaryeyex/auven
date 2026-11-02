@@ -10,10 +10,15 @@ CREATE INDEX IF NOT EXISTS events_agent_time_idx ON events(agent_id,created_at);
 CREATE TABLE IF NOT EXISTS action_requests (id text PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces(id), agent_id text NOT NULL REFERENCES agents(id), event_id text NOT NULL UNIQUE REFERENCES events(id), messages_json text NOT NULL, max_tokens integer NOT NULL, status text NOT NULL CHECK (status IN ('pending','processing','completed','denied','failed')), result_json text, created_at text NOT NULL, decided_at text);
 CREATE INDEX IF NOT EXISTS action_requests_workspace_time_idx ON action_requests(workspace_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS action_requests_agent_time_idx ON action_requests(agent_id,created_at DESC);
-CREATE TABLE IF NOT EXISTS proofs (id text PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces(id), agent_id text NOT NULL REFERENCES agents(id), kind text NOT NULL, payload text NOT NULL, signature text NOT NULL, public_key text NOT NULL, created_at text NOT NULL, tx_hash text, chain_status text, chain_signer text);
+CREATE TABLE IF NOT EXISTS proofs (id text PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces(id), agent_id text NOT NULL REFERENCES agents(id), kind text NOT NULL, payload text NOT NULL, signature text NOT NULL, public_key text NOT NULL, created_at text NOT NULL, tx_hash text, chain_status text, chain_signer text, chain_network text NOT NULL DEFAULT 'solana');
 CREATE INDEX IF NOT EXISTS proofs_workspace_time_idx ON proofs(workspace_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS proofs_agent_idx ON proofs(agent_id);
 ALTER TABLE proofs ADD COLUMN IF NOT EXISTS chain_target text;
+ALTER TABLE proofs ADD COLUMN IF NOT EXISTS chain_network text;
+UPDATE proofs SET chain_network = 'robinhood' WHERE chain_network IS NULL AND tx_hash IS NOT NULL;
+UPDATE proofs SET chain_network = 'solana' WHERE chain_network IS NULL;
+ALTER TABLE proofs ALTER COLUMN chain_network SET DEFAULT 'solana';
+ALTER TABLE proofs ALTER COLUMN chain_network SET NOT NULL;
 
 CREATE TABLE IF NOT EXISTS accounts (
   id text PRIMARY KEY,
@@ -36,8 +41,9 @@ CREATE TABLE IF NOT EXISTS account_wallets (
   address text PRIMARY KEY,
   account_id text NOT NULL REFERENCES accounts(id),
   created_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT account_wallets_lowercase CHECK (address = lower(address))
+  CONSTRAINT account_wallets_address_present CHECK (length(address) > 0)
 );
+ALTER TABLE account_wallets DROP CONSTRAINT IF EXISTS account_wallets_lowercase;
 CREATE INDEX IF NOT EXISTS account_wallets_account_idx ON account_wallets(account_id);
 CREATE TABLE IF NOT EXISTS wallet_link_challenges (
   nonce text PRIMARY KEY,

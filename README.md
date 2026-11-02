@@ -1,47 +1,39 @@
-<p align="center">
-  <img src="assets/auven-x-banner.png" alt="AUVEN — Control what agents do. Verify what happened." width="100%">
-</p>
+<p align="center"><img src="assets/auven-readme-banner.svg" alt="AUVEN - Agent control and verifiable activity" width="100%"></p>
 
 <p align="center">
-  <a href="#run-locally"><img src="https://img.shields.io/badge/Node.js-22-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js 22"></a>
-  <a href="#hosted-setup"><img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL"></a>
-  <a href="#hosted-setup"><img src="https://img.shields.io/badge/Privy-authentication-7057E8?style=flat-square" alt="Privy"></a>
-  <a href="#proofs"><img src="https://img.shields.io/badge/ML--DSA--65-post--quantum-7057E8?style=flat-square" alt="ML-DSA-65"></a>
-  <a href="#proofs"><img src="https://img.shields.io/badge/Robinhood%20Chain-4663-24202F?style=flat-square" alt="Robinhood Chain 4663"></a>
-  <a href="#auven-token"><img src="https://img.shields.io/badge/%24AUVEN-ERC--20-7057E8?style=flat-square" alt="$AUVEN ERC-20"></a>
-  <a href="#hosted-setup"><img src="https://img.shields.io/badge/Vercel-deployed-000000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel"></a>
+  <img src="https://img.shields.io/badge/Node.js-22-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js 22">
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Privy-authentication-7057E8?style=flat-square" alt="Privy">
+  <img src="https://img.shields.io/badge/ML--DSA--65-signed%20proofs-7057E8?style=flat-square" alt="ML-DSA-65">
+  <img src="https://img.shields.io/badge/Solana-proof%20commitments-24202F?style=flat-square&logo=solana&logoColor=white" alt="Solana">
+  <img src="https://img.shields.io/badge/MCP-agent%20tools-7057E8?style=flat-square" alt="MCP">
 </p>
 
 # AUVEN
 
-AUVEN is a gateway for AI agents that run in your own applications. It gives each connected agent a credential and controls supported requests with daily limits and optional owner approval. Each decision is recorded. Agent passports and activity checkpoints can be signed with ML-DSA-65 and verified independently.
+AUVEN puts a control point between an AI agent and the provider requests it makes. Connect an agent you already run, set limits in a workspace, and send supported calls through the gateway. AUVEN records each decision and can sign agent passports and activity checkpoints with ML-DSA-65. Signed proofs can be checked without trusting the dashboard.
 
-The gateway controls traffic sent through it. An agent that calls a provider directly with another key is outside that control.
+Only traffic routed through AUVEN is controlled. An agent using a separate provider key directly is outside the gateway.
 
-## What works
+## Available now
 
-- **Agent identity.** Register an external agent in a workspace and issue a credential. The agent's passport is signed when it is registered.
-- **Request control.** Stop or resume an agent, set daily request and estimated spending limits, cap response tokens, and hold calls for owner approval. AUVEN rejects duplicate request IDs and records allowed, pending, and denied calls. The supported provider route is OpenAI chat completions when a server key is configured.
-- **MCP connection.** Connect Codex or Claude Code to an agent-scoped remote MCP server. `auven_chat` uses the gateway policy; `auven_action_status` checks the result after owner review. [Setup guide](docs/MCP.md).
-- **Verifiable records.** Sign activity checkpoints with ML-DSA-65, export proofs, and reject changed payloads or signatures with the standalone verifier.
-- **Onchain commitment.** Submit the hash of a signed proof on Robinhood Chain, then check the receipt, signer, target, and commitment. The included [proof registry](https://robinhoodchain.blockscout.com/address/0xEAc2A9D6389ea558eF04191fC99b7AB94A90fc22) is deployed on chain 4663.
-- **$AUVEN holder proof.** Read the token balance of a Privy-verified linked wallet on Robinhood Chain and create an ML-DSA-65 signed snapshot for an agent in that account's workspace.
+- **Workspaces and agent credentials.** Register an external agent and give it a credential scoped to the gateway. A signed passport is created at registration.
+- **Request policies.** Pause or resume an agent, set daily request and estimated spending limits, cap response tokens, and require owner approval. The supported provider route is OpenAI chat completions when the server has an API key. Spending is an estimate based on token limits, not a provider invoice.
+- **MCP access.** Connect Codex or Claude Code to an agent-scoped remote MCP endpoint. `auven_chat` sends the request through policy checks; `auven_action_status` retrieves the result of an approval. [Connect with MCP](docs/MCP.md).
+- **Activity and proofs.** Inspect allowed, denied, pending, and failed requests. Export ML-DSA-65 signed passports and checkpoints and verify them with the standalone tool.
+- **Onchain publication.** The Solana publication path records a proof commitment in a signed Memo transaction once an operator configures a funded publisher. The proof payload and signature stay offchain. Previously published records can still be verified on their original network.
 
-AUVEN registers and controls agents you already run; it does not host or create their runtime. Spending is estimated from the requested token limit and is not a provider invoice.
+The [interactive demo](https://auven.xyz/demo) shows policy decisions and owner approval with sample data. It makes no provider calls.
 
-Try the [interactive Agent Control demo](https://auven.xyz/demo) to see an allowed call, a blocked limit, and owner approval. It is a simulation with sample data.
+## Solana transition and $AUVEN
 
-## $AUVEN token
+Privy email sign-in remains available. Solana wallet sign-in and wallet linking are prepared in the app; the operator must enable Solana in the existing Privy application. Existing EVM wallet-only accounts have a separate recovery sign-in path so their owners can link a Solana wallet without losing their workspace.
 
-[$AUVEN](https://robinhoodchain.blockscout.com/address/0x6e6e172ad5d06f6ca79f9c9b355fd8cdc2afb64d) is an ERC-20 token on Robinhood Chain (chain ID 4663). Contract: `0x6e6e172ad5d06f6ca79f9c9b355fd8cdc2afb64d`.
-
-The token contract is separate from this repository. The server reads its `balanceOf` function at a specific chain block; no token private key or transfer approval is needed. In the **$AUVEN** workspace tab, a holder can create a signed proof recording the verified wallet, balance, block, token contract, and agent ID. The proof is an observation at that block, not a continuing balance guarantee. It can be exported and optionally published as a commitment through the existing proof registry. See the [token page](https://auven.xyz/token).
-
-The token is not required for sign-in, agent registration, gateway requests, or proof publication. Token payments, bonus quotas, and burning are not active.
+The Solana $AUVEN mint has not been configured. Until a confirmed mint exists, the app does not show token balances or issue holder proofs. Token payments, holder quotas, buybacks, burns, and distributions are not active features. Agent controls and signed activity work independently of the token. The [token page](https://auven.xyz/token) describes the current state and proposed utilities.
 
 ## Run locally
 
-Use Node.js 22.x.
+Use Node.js 22.x:
 
 ```bash
 npm ci
@@ -50,87 +42,64 @@ npm test
 npm start
 ```
 
-Open `http://127.0.0.1:4174`. Local data is stored in SQLite under `.data/`, which Git ignores. The dashboard can create a workspace and register an agent. Save the workspace admin token and the agent credential when they appear: only hashes are stored, so neither can be recovered later.
+Open `http://127.0.0.1:4174`. Without `DATABASE_URL`, local data is kept in SQLite under `.data/`. This directory is ignored by Git. The dashboard can create a workspace and connect an agent. Save the workspace admin token and agent credential when shown; only their hashes are stored.
 
-Set `AUVEN_OPENAI_API_KEY` to exercise the supported provider route. With no provider key, identity, policy, signing, export, and verification remain available locally.
+Copy [`.env.example`](.env.example) into a local `.env` file and add the values needed for the flows you want to test. `AUVEN_OPENAI_API_KEY` enables real gateway requests. Without it, identity, policies, signing, export, and signature verification can still be used locally.
 
 ## Connect an agent
 
-1. Sign in and create a workspace in the dashboard. If hosted authentication has not been configured, use the operator's `AUVEN_SETUP_TOKEN` to create a legacy workspace.
-2. Save the admin token shown once as a recovery and API credential.
-3. Open **Agents** and select **Connect agent**. Enter its name, purpose, and daily limit.
-4. Save the credential shown once, then use it in requests from the agent you run.
+1. Sign in and create a workspace. Open **Agents** and choose **Connect agent**.
+2. Enter the agent's name, purpose, and daily limit. Save the credential shown once.
+3. Configure [MCP](docs/MCP.md) in Codex or Claude Code, or call the gateway API from your own server.
+4. Review the result in **Activity**; change controls under **Policies**.
 
-The equivalent API call is:
-
-```bash
-curl -X POST http://127.0.0.1:4174/api/agents \
-  -H 'Authorization: Bearer YOUR_ADMIN_TOKEN' \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Research assistant","purpose":"Summarize research","daily_limit_cents":1000}'
-```
-
-A controlled provider request needs the agent credential and a new idempotency key:
+Direct API example:
 
 ```bash
-curl -X POST http://127.0.0.1:4174/api/gateway/chat \
+curl -X POST https://YOUR_AUVEN_DOMAIN/api/gateway/chat \
   -H 'Authorization: Bearer YOUR_AGENT_CREDENTIAL' \
   -H 'Idempotency-Key: unique-request-001' \
   -H 'Content-Type: application/json' \
   -d '{"messages":[{"role":"user","content":"Hello"}],"max_tokens":100}'
 ```
 
-The gateway checks the agent's status and budget before calling the provider. Stop an agent from **Agents**, or call `PATCH /api/agents/:id/status` with `{"status":"stopped"}`. Activity appears under **Activity**.
+The idempotency key must be new for each logical request. A duplicate is rejected.
 
-## Proofs
+## Verify a proof
 
-The signed format contains the canonical payload, ML-DSA-65 signature, public key, format version, and SHA-256 digest. Export a passport from **Proofs**, or create an activity checkpoint with `POST /api/checkpoints`.
+Export a passport from **Proofs**, or create an activity checkpoint with `POST /api/checkpoints`. The standalone verifier checks the canonical payload, digest, and ML-DSA-65 signature:
 
 ```bash
 node verify.cjs path/to/proof.json
-node verify.cjs path/to/proof.json 0xTRANSACTION_HASH 0xTRUSTED_PUBLISHER [0xREGISTRY_ADDRESS]
 ```
 
-The first command checks the signature and digest. The second also checks inclusion on Robinhood Chain (chain ID 4663) against the publisher address you trust. Supply the registry address if that proof was published through the deployed registry. Without a registry configured, the server writes the commitment in a zero-value transaction to its dedicated signer. The chain does not verify the ML-DSA signature. A valid proof establishes that its bytes match the signature and recorded commitment; it does not establish that the underlying activity was truthful.
+When a proof has been published on Solana, you can also check its transaction using the trusted publisher address:
 
-| Route | Purpose |
-| --- | --- |
-| `POST /api/workspaces` | Create a workspace; return its admin token once |
-| `GET /api/agents`, `POST /api/agents` | List or register connected agents |
-| `PATCH /api/agents/:id/status` | Stop or resume an agent |
-| `POST /api/gateway/chat` | Apply policy and forward a supported request |
-| `POST /mcp` | Agent-scoped Streamable HTTP MCP endpoint for `auven_chat` |
-| `GET /api/events` | Read the workspace activity log |
-| `POST /api/checkpoints`, `GET /api/proofs` | Sign a checkpoint and inspect proofs |
-| `POST /api/proofs/:id/publish` | Submit a proof commitment when a chain signer is configured |
-| `GET /api/proofs/:id/inclusion` | Check the transaction and commitment |
-| `POST /api/verify` | Verify a signed proof without database access |
-| `GET /api/token/status` | Read the balance of Privy-verified linked wallets on Robinhood Chain |
-| `POST /api/token/attest` | Create an agent holder proof for a verified linked wallet with a positive balance |
+```bash
+node verify.cjs path/to/proof.json SOLANA_TRANSACTION_SIGNATURE TRUSTED_PUBLISHER_ADDRESS
+```
+
+The chain records a commitment to the proof bytes. It does not verify the ML-DSA-65 signature or establish that the reported real-world activity was truthful.
 
 ## Hosted setup
 
-`vercel.json` serves `dist/` and the API Function. Hosted data uses PostgreSQL; set `DATABASE_URL` and apply `db/schema.sql` with `npm run db:migrate` before using database-backed routes. The server will return `database_not_configured` until a connection string is present.
+Vercel serves the public pages and API. Supabase PostgreSQL stores hosted data; Privy handles user login. The server applies a narrow Solana compatibility migration on its first database-backed request. The full [`db/schema.sql`](db/schema.sql) remains available for manual setup. Older published proofs keep their original network metadata, and wallet addresses can be case-sensitive.
 
-| Variable | Purpose |
+| Variable | Used for |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string; use Supabase's transaction pooler on port 6543 for Vercel |
-| `AUVEN_PRIVY_APP_ID` | Privy app ID for email and wallet sign-in |
-| `AUVEN_PRIVY_APP_SECRET` | Server-only secret for verifying Privy tokens and looking up linked accounts |
-| `AUVEN_SETUP_TOKEN` | Legacy admin-token workspace bootstrap |
-| `AUVEN_PQ_SIGNING_SEED` | Stable signing identity: 32 random bytes encoded as 64 hex characters |
-| `AUVEN_OPENAI_API_KEY` | Enables the supported OpenAI gateway route |
-| `AUVEN_MODEL` | Optional model name; defaults to `gpt-6.1-sol` |
-| `AUVEN_RH_PRIVATE_KEY` | Dedicated funded signer for onchain publication |
-| `AUVEN_RH_RPC_URL` | Robinhood Chain RPC for proof publication and server-side $AUVEN balance reads; a public fallback exists |
-| `AUVEN_RH_REGISTRY_ADDRESS` | Optional deployed proof registry; required to use the contract route |
+| `DATABASE_URL` | Supabase PostgreSQL connection |
+| `AUVEN_PRIVY_APP_ID` | Existing Privy application |
+| `AUVEN_PRIVY_APP_SECRET` | Server-side Privy token verification |
+| `AUVEN_PQ_SIGNING_SEED` | Stable ML-DSA-65 signing identity |
+| `AUVEN_OPENAI_API_KEY` | Controlled OpenAI chat route |
+| `AUVEN_MODEL` | Optional model override |
+| `AUVEN_SETUP_TOKEN` | Optional legacy workspace bootstrap |
+| `AUVEN_SOLANA_RPC_URL` | Dedicated Solana RPC for publication and token reads |
+| `AUVEN_SOLANA_SECRET_KEY` | Dedicated funded Solana proof publisher; required only for publication |
+| `AUVEN_SOLANA_TOKEN_MINT` | Confirmed token mint; leave unset until the token exists |
 
-Configure sensitive values as server-side Vercel secrets and redeploy after changing them. The Privy app ID is public; its app secret stays on the server. Back up the PQ seed: changing it creates a different signing identity. See [SECURITY.md](SECURITY.md).
+Keep the database URL, signing seed, API key, and publisher secret in server-side secret storage. Redeploy after changing Vercel variables. See the [deployment guide](docs/DEPLOYMENT.md), [user guide](docs/USER_GUIDE.md), and [agent integration guide](docs/AGENT_INTEGRATION.md).
 
-Privy needs email and wallet login enabled and the app origins configured. Email sign-in uses an OTP code. The server accepts verified identity or access tokens. Supabase remains the PostgreSQL database. See [Deployment guide](docs/DEPLOYMENT.md) and [User guide](docs/USER_GUIDE.md) for the exact steps.
+## Repository map
 
-For request examples and error handling in an existing agent application, see the [Agent integration guide](docs/AGENT_INTEGRATION.md).
-
-## Code
-
-`api-handler.cjs` implements the API; `db.cjs` and `db-postgres.cjs` provide local and hosted storage; `proof.cjs` signs and verifies records; `chain.cjs` submits and checks onchain commitments; `verify.cjs` is the standalone verifier. Tests under `test/` cover the API flow, policy decisions, workspace isolation, proof tampering, and receipt checks.
+`api-handler.cjs` implements the API; `db.cjs` and `db-postgres.cjs` provide local and hosted storage; `proof.cjs` signs and verifies records; `solana.cjs` publishes and checks new commitments; `verify.cjs` is the standalone verifier. The previous chain verifier remains for already published records. Tests under `test/` cover the API, policy decisions, account isolation, proof tampering, and publication checks.

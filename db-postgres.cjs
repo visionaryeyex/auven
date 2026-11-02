@@ -3,6 +3,29 @@ if(!process.env.DATABASE_URL)throw Error('DATABASE_URL required');
 // Vercel creates a pool per warm function instance. Keep each instance small
 // when connecting through Supabase's transaction pooler.
 const pool=new Pool({connectionString:process.env.DATABASE_URL,max:1,connectionTimeoutMillis:10000});
+let schemaPromise;
+function ensureSchema(){
+  if(!schemaPromise)schemaPromise=(async()=>{
+    const client=await pool.connect();
+    try{
+      await client.query('BEGIN');
+      await client.query("SELECT pg_advisory_xact_lock(46630001)");
+      const column=(await client.query("SELECT column_default,is_nullable FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='proofs' AND column_name='chain_network'")).rows[0];
+      const constraint=(await client.query("SELECT 1 FROM pg_constraint WHERE conname='account_wallets_lowercase' AND conrelid='account_wallets'::regclass")).rowCount;
+      if(!column || column.column_default!=="'solana'::text" || column.is_nullable!=='NO' || constraint){
+        await client.query('ALTER TABLE account_wallets DROP CONSTRAINT IF EXISTS account_wallets_lowercase');
+        await client.query('ALTER TABLE proofs ADD COLUMN IF NOT EXISTS chain_network text');
+        await client.query("UPDATE proofs SET chain_network='robinhood' WHERE chain_network IS NULL AND tx_hash IS NOT NULL");
+        await client.query("UPDATE proofs SET chain_network='solana' WHERE chain_network IS NULL");
+        await client.query("ALTER TABLE proofs ALTER COLUMN chain_network SET DEFAULT 'solana'");
+        await client.query('ALTER TABLE proofs ALTER COLUMN chain_network SET NOT NULL');
+      }
+      await client.query('COMMIT');
+    }catch(error){await client.query('ROLLBACK');throw error}
+    finally{client.release()}
+  })().catch(error=>{schemaPromise=null;throw error});
+  return schemaPromise;
+}
 const hash=s=>createHash('sha256').update(s).digest('hex'),id=()=>randomBytes(16).toString('hex'),secret=()=>randomBytes(32).toString('base64url');
 async function one(sql,args=[]){return (await pool.query(sql,args)).rows[0]||null}async function many(sql,args=[]){return (await pool.query(sql,args)).rows}async function run(sql,args=[]){return (await pool.query(sql,args)).rowCount}
 async function workspace(token){return token?one('SELECT id,name FROM workspaces WHERE admin_hash=$1',[hash(token)]):null}
@@ -39,10 +62,10 @@ async function denyAction(w,id){const client=await pool.connect();try{await clie
 async function finishAction(id,status,result,actual){const client=await pool.connect();try{await client.query('BEGIN');const action=(await client.query("UPDATE action_requests SET status=$2,result_json=$3,messages_json='[]' WHERE id=$1 AND status='processing' RETURNING event_id",[id,status,JSON.stringify(result)])).rows[0];if(!action){await client.query('COMMIT');return false}await client.query('UPDATE events SET decision=$1,reason=$2,actual=$3,reserved=$4 WHERE id=$5',[status==='completed'?'allowed':'failed',status==='completed'?'provider_completed':'provider_error',actual,status==='completed'?actual:0,action.event_id]);await client.query('COMMIT');return true}catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}}
 async function settle(id,decision,reason,actual){return run('UPDATE events SET decision=$1,reason=$2,actual=$3 WHERE id=$4',[decision,reason,actual,id])}
 async function createProof(w,a,kind,proof){const proofId=id();await run('INSERT INTO proofs(id,workspace_id,agent_id,kind,payload,signature,public_key,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[proofId,w,a,kind,JSON.stringify(proof),proof.signature,proof.public_key,new Date().toISOString()]);return proofId}
-async function listProofs(w){return many('SELECT id,agent_id,kind,payload,created_at,tx_hash,chain_status,chain_signer,chain_target FROM proofs WHERE workspace_id=$1 ORDER BY created_at DESC',[w])}
+async function listProofs(w){return many('SELECT id,agent_id,kind,payload,created_at,tx_hash,chain_status,chain_signer,chain_target,chain_network FROM proofs WHERE workspace_id=$1 ORDER BY created_at DESC',[w])}
 async function getProof(w,id){return one('SELECT * FROM proofs WHERE id=$1 AND workspace_id=$2',[id,w])}
 async function claimProof(w,id){return run("UPDATE proofs SET chain_status='publishing' WHERE id=$1 AND workspace_id=$2 AND chain_status IS NULL AND tx_hash IS NULL",[id,w])}
-async function updateProof(id,status,txHash=null,signer=null,target=null){return run('UPDATE proofs SET chain_status=$1,tx_hash=COALESCE($2,tx_hash),chain_signer=COALESCE($3,chain_signer),chain_target=COALESCE($4,chain_target) WHERE id=$5',[status,txHash,signer,target,id])}
+async function updateProof(id,status,txHash=null,signer=null,target=null,network=null){return run('UPDATE proofs SET chain_status=$1,tx_hash=COALESCE($2,tx_hash),chain_signer=COALESCE($3,chain_signer),chain_target=COALESCE($4,chain_target),chain_network=COALESCE($5,chain_network) WHERE id=$6',[status,txHash,signer,target,network,id])}
 async function agentOwned(w,a){return !!await one('SELECT id FROM agents WHERE id=$1 AND workspace_id=$2',[a,w])}
 async function checkpointEvents(a){return many('SELECT id,decision,reason,reserved,actual,created_at FROM events WHERE agent_id=$1 ORDER BY created_at,id',[a])}
-module.exports={pool,hash,id,workspace,agentByToken,countWorkspaces,createWorkspace,createAgent,listAgents,setAgentStatus,setAgentPolicy,listEvents,reserve,settle,createProof,listProofs,getProof,claimProof,updateProof,agentOwned,checkpointEvents,listActions,actionForAgent,claimAction,denyAction,finishAction};
+module.exports={pool,ensureSchema,hash,id,workspace,agentByToken,countWorkspaces,createWorkspace,createAgent,listAgents,setAgentStatus,setAgentPolicy,listEvents,reserve,settle,createProof,listProofs,getProof,claimProof,updateProof,agentOwned,checkpointEvents,listActions,actionForAgent,claimAction,denyAction,finishAction};

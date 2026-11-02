@@ -1,7 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { Keypair } = require('@solana/web3.js');
 
 process.env.DATABASE_URL = 'postgres://test:test@127.0.0.1:1/test';
+const MINT = Keypair.generate().publicKey.toBase58();
+process.env.AUVEN_SOLANA_TOKEN_MINT = MINT;
 const Auth = require('../auth.cjs');
 const Accounts = require('../db-accounts.cjs');
 const D = require('../db-postgres.cjs');
@@ -9,13 +12,14 @@ const Token = require('../token.cjs');
 const Proof = require('../proof.cjs');
 const { handler } = require('../api-handler.cjs');
 
-const LINKED = '0x0000000000000000000000000000000000000001';
-const SPOOFED = '0x0000000000000000000000000000000000000002';
+const LINKED = Keypair.generate().publicKey.toBase58();
+const SPOOFED = Keypair.generate().publicKey.toBase58();
 const original = {
   userFromToken: Auth.userFromToken,
   resolveAccount: Accounts.resolveAccount,
   workspaceForAccount: Accounts.workspaceForAccount,
   agentOwned: D.agentOwned,
+  ensureSchema: D.ensureSchema,
   createProof: D.createProof,
   readWallets: Token.readWallets,
   sign: Proof.sign
@@ -37,10 +41,11 @@ test('holder proof uses only the verified Privy wallet and an owned agent', asyn
   Accounts.resolveAccount = async () => 'account-1';
   Accounts.workspaceForAccount = async () => ({ id: 'workspace-1' });
   D.agentOwned = async (_workspace, agent) => agent === 'agent-1';
+  D.ensureSchema = async () => {};
   D.createProof = async (_workspace, _agent, kind, proof) => { stored = { kind, proof }; return 'proof-1'; };
   Token.readWallets = async wallets => {
     observed.push(wallets);
-    return { holder: true, symbol: 'AUVEN', decimals: 18, chain_id: 4663, block_number: 123, checked_at: '2026-10-31T00:00:00Z', wallets: [{ address: LINKED, balance_raw: '1' }] };
+    return { holder: true, symbol: 'AUVEN', decimals: 6, token_mint: MINT, checked_at: '2026-10-31T00:00:00Z', wallets: [{ address: LINKED, balance_raw: '1', slot: 123 }] };
   };
   Proof.sign = async payload => ({ algorithm: 'ML-DSA-65', payload });
   try {
@@ -53,7 +58,9 @@ test('holder proof uses only the verified Privy wallet and an owned agent', asyn
     assert.equal(stored.kind, 'token_holder');
     assert.equal(stored.proof.payload.wallet_address, LINKED);
     assert.equal(stored.proof.payload.agent_id, 'agent-1');
-    assert.equal(stored.proof.payload.block_number, 123);
+    assert.equal(stored.proof.payload.slot, 123);
+    assert.equal(stored.proof.payload.token_mint, MINT);
+    assert.equal(stored.proof.payload.network, 'solana');
     Token.readWallets = async () => ({ holder: false, wallets: [], symbol: 'AUVEN' });
     const empty = await call('POST', '/api/token/attest', { agent_id: 'agent-1' });
     assert.equal(empty.status, 422);
@@ -62,7 +69,7 @@ test('holder proof uses only the verified Privy wallet and an owned agent', asyn
     for (const [key, value] of Object.entries(original)) {
       if (key === 'userFromToken') Auth[key] = value;
       else if (['resolveAccount', 'workspaceForAccount'].includes(key)) Accounts[key] = value;
-      else if (['agentOwned', 'createProof'].includes(key)) D[key] = value;
+      else if (['agentOwned', 'createProof', 'ensureSchema'].includes(key)) D[key] = value;
       else if (key === 'readWallets') Token[key] = value;
       else Proof[key] = value;
     }
