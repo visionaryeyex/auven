@@ -44,6 +44,8 @@ First ask Codex or Claude Code: “Call the `auven_connection_test` tool.” It 
 
 Then ask your coding agent: “Use AUVEN's `auven_chat` tool to summarize the purpose of our project in two sentences.” Open **Activity** in AUVEN. The call should appear under the registered agent. Stop the agent in **Agents** and try again to confirm the policy blocks another call. Calls made directly by Codex or Claude Code outside `auven_chat` are not controlled by AUVEN.
 
+When holder model access is enabled, `auven_chat` also accepts `model_tier: "holder"`. AUVEN checks the current $AUVEN balance of Solana wallets linked to the workspace owner's Privy account before sending the request. The operator sets the minimum and model; the tool cannot choose an arbitrary provider model. If approval is required, eligibility is checked again when the owner approves. Agent limits still apply. Without a configured holder tier, omit `model_tier` and the standard model is used.
+
 For an agent created in AUVEN, `auven_chat` also applies the instructions saved in its workspace. MCP callers cannot replace those instructions with their own system or developer message. External registered agents keep their instructions in their own application.
 
 In **Policies**, set each agent's daily request cap, maximum response tokens per call, estimated USD budget, and optional owner approval. When approval is on, `auven_chat` returns an action ID without calling OpenAI. Open **Approvals** in your workspace to approve or deny the request. Then ask your coding agent to use `auven_action_status` with that action ID. An approved request returns the provider result; a denied one reports the denial. Keep the same action ID when checking again; repeating `auven_chat` creates a new request.

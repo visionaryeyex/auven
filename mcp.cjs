@@ -8,7 +8,8 @@ const tool = {
     type: 'object',
     properties: {
       prompt: {type: 'string', description: 'The prompt to send through AUVEN.'},
-      max_tokens: {type: 'integer', minimum: 1, maximum: 4096, default: 256, description: 'Maximum response tokens (1-4096).'}
+      max_tokens: {type: 'integer', minimum: 1, maximum: 4096, default: 256, description: 'Maximum response tokens (1-4096).'},
+      model_tier: {type: 'string', enum: ['standard', 'holder'], default: 'standard', description: 'Use holder only when the workspace has an eligible linked $AUVEN wallet and holder model access is enabled.'}
     },
     required: ['prompt'],
     additionalProperties: false
@@ -75,8 +76,8 @@ async function handle(req, res, {db, callGateway, actionStatus}) {
   }
   if (message.params?.name !== tool.name) return error(res, id, -32602, 'Unknown tool');
   const args = message.params.arguments;
-  if (!args || typeof args.prompt !== 'string' || !args.prompt.trim() || args.prompt.length > 16000 || (args.max_tokens !== undefined && (!Number.isInteger(args.max_tokens) || args.max_tokens < 1 || args.max_tokens > 4096))) return error(res, id, -32602, 'Invalid tool arguments');
-  const outcome = await callGateway({credential, prompt: args.prompt, maxTokens: args.max_tokens ?? 256, requestId: randomUUID()});
+  if (!args || typeof args.prompt !== 'string' || !args.prompt.trim() || args.prompt.length > 16000 || (args.max_tokens !== undefined && (!Number.isInteger(args.max_tokens) || args.max_tokens < 1 || args.max_tokens > 4096)) || (args.model_tier !== undefined && !['standard','holder'].includes(args.model_tier))) return error(res, id, -32602, 'Invalid tool arguments');
+  const outcome = await callGateway({credential, prompt: args.prompt, maxTokens: args.max_tokens ?? 256, modelTier: args.model_tier || 'standard', requestId: randomUUID()});
   if(outcome.status===202)return rpc(res,id,{content:[{type:'text',text:`Awaiting workspace owner approval. Action ID: ${outcome.data.action_id}. Use auven_action_status with this ID to read the outcome after review.`}]});
   if (outcome.status !== 200) return rpc(res, id, {isError: true, content: [{type: 'text', text: `AUVEN ${outcome.status}: ${outcome.data.error || 'request_failed'}${outcome.data.event_id ? ` (event ${outcome.data.event_id})` : ''}`}]});
   const answer = outcome.data.result?.choices?.[0]?.message?.content;

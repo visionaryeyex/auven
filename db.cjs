@@ -15,6 +15,9 @@ for(const [name,type] of [['daily_request_limit','INTEGER NOT NULL DEFAULT 100']
 for(const [name,type] of [['chain_status','TEXT'],['chain_signer','TEXT'],['chain_target','TEXT'],['chain_network',"TEXT NOT NULL DEFAULT 'robinhood'"]]){
   if(!db.prepare('PRAGMA table_info(proofs)').all().some(c=>c.name===name))db.exec(`ALTER TABLE proofs ADD COLUMN ${name} ${type}`);
 }
+for(const table of ['events','action_requests']){
+  if(!db.prepare(`PRAGMA table_info(${table})`).all().some(c=>c.name==='model_tier'))db.exec(`ALTER TABLE ${table} ADD COLUMN model_tier TEXT NOT NULL DEFAULT 'standard'`);
+}
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const secret=()=>randomBytes(32).toString('base64url');
 const id=()=>randomBytes(16).toString('hex');
@@ -38,13 +41,14 @@ function reserve(agent,requestId,amount,request={}){db.exec('BEGIN IMMEDIATE');t
   const reason=live.status!=='active'?'agent_stopped':request.max_tokens>live.max_tokens_per_request?'token_limit_exceeded':totals.calls>=live.daily_request_limit?'request_limit_exceeded':totals.spent+amount>live.daily_limit?'budget_exceeded':live.approval_required&&request.messages?'approval_required':'policy_allowed';
   const decision=reason==='policy_allowed'?'reserved':reason==='approval_required'?'pending':'denied';
   const event={id:id(),workspace_id:agent.workspace_id,agent_id:agent.id,request_id:requestId,decision,reason,reserved:decision==='denied'?0:amount,actual:0,created_at:new Date().toISOString()};
-  db.prepare('INSERT INTO events(id,workspace_id,agent_id,request_id,decision,reason,reserved,actual,created_at) VALUES(?,?,?,?,?,?,?,?,?)').run(event.id,event.workspace_id,event.agent_id,requestId,decision,reason,event.reserved,0,event.created_at);
+  db.prepare('INSERT INTO events(id,workspace_id,agent_id,request_id,decision,reason,reserved,actual,created_at,model_tier) VALUES(?,?,?,?,?,?,?,?,?,?)').run(event.id,event.workspace_id,event.agent_id,requestId,decision,reason,event.reserved,0,event.created_at,request.model_tier||'standard');
   let action_id;
-  if(decision==='pending'){action_id=id();db.prepare('INSERT INTO action_requests(id,workspace_id,agent_id,event_id,messages_json,max_tokens,status,created_at) VALUES(?,?,?,?,?,?,?,?)').run(action_id,event.workspace_id,agent.id,event.id,JSON.stringify(request.messages),request.max_tokens,'pending',event.created_at)}
+  if(decision==='pending'){action_id=id();db.prepare('INSERT INTO action_requests(id,workspace_id,agent_id,event_id,messages_json,max_tokens,status,created_at,model_tier) VALUES(?,?,?,?,?,?,?,?,?)').run(action_id,event.workspace_id,agent.id,event.id,JSON.stringify(request.messages),request.max_tokens,'pending',event.created_at,request.model_tier||'standard')}
   db.exec('COMMIT');return {event,action_id}
 }catch(e){db.exec('ROLLBACK');throw e}}
-function listActions(workspaceId){return db.prepare("SELECT a.id,a.agent_id,a.event_id,a.messages_json,a.max_tokens,a.status,a.created_at,a.decided_at,g.name AS agent_name FROM action_requests a JOIN agents g ON g.id=a.agent_id WHERE a.workspace_id=? ORDER BY a.created_at DESC LIMIT 100").all(workspaceId)}
+function listActions(workspaceId){return db.prepare("SELECT a.id,a.agent_id,a.event_id,a.messages_json,a.max_tokens,a.model_tier,a.status,a.created_at,a.decided_at,g.name AS agent_name FROM action_requests a JOIN agents g ON g.id=a.agent_id WHERE a.workspace_id=? ORDER BY a.created_at DESC LIMIT 100").all(workspaceId)}
 function actionForAgent(agentId,actionId){return db.prepare('SELECT id,agent_id,event_id,status,result_json,created_at,decided_at FROM action_requests WHERE agent_id=? AND id=?').get(agentId,actionId)||null}
+function pendingAction(workspaceId,actionId){return db.prepare("SELECT id,model_tier FROM action_requests WHERE workspace_id=? AND id=? AND status='pending'").get(workspaceId,actionId)||null}
 function claimAction(workspaceId,actionId){db.exec('BEGIN IMMEDIATE');try{
   const row=db.prepare("SELECT a.*,g.status AS agent_status,g.daily_limit,g.daily_request_limit,g.max_tokens_per_request,e.reserved AS estimate FROM action_requests a JOIN agents g ON g.id=a.agent_id JOIN events e ON e.id=a.event_id WHERE a.id=? AND a.workspace_id=? AND a.status='pending'").get(actionId,workspaceId);
   if(!row){db.exec('COMMIT');return null}
@@ -65,4 +69,4 @@ function claimProof(workspaceId,proofId){return db.prepare("UPDATE proofs SET ch
 function updateProof(proofId,status,txHash=null,signer=null,target=null,network=null){db.prepare('UPDATE proofs SET chain_status=?,tx_hash=COALESCE(?,tx_hash),chain_signer=COALESCE(?,chain_signer),chain_target=COALESCE(?,chain_target),chain_network=COALESCE(?,chain_network) WHERE id=?').run(status,txHash,signer,target,network,proofId)}
 function agentOwned(workspaceId,agentId){return !!db.prepare('SELECT id FROM agents WHERE id=? AND workspace_id=?').get(agentId,workspaceId)}
 function checkpointEvents(agentId){return db.prepare('SELECT id,decision,reason,reserved,actual,created_at FROM events WHERE agent_id=? ORDER BY created_at,id').all(agentId)}
-module.exports={db,dir,hash,workspace,agentByToken,createWorkspace,createAgent,listAgents,getAgent,markMcpConnection,rotateAgentCredential,setAgentStatus,setAgentPolicy,listEvents,reserve,settle,id,countWorkspaces,createProof,listProofs,getProof,claimProof,updateProof,agentOwned,checkpointEvents,listActions,actionForAgent,claimAction,denyAction,finishAction};
+module.exports={db,dir,hash,workspace,agentByToken,createWorkspace,createAgent,listAgents,getAgent,markMcpConnection,rotateAgentCredential,setAgentStatus,setAgentPolicy,listEvents,reserve,settle,id,countWorkspaces,createProof,listProofs,getProof,claimProof,updateProof,agentOwned,checkpointEvents,listActions,actionForAgent,pendingAction,claimAction,denyAction,finishAction};

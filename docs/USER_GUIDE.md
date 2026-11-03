@@ -73,7 +73,9 @@ Older published records remain verifiable through their original transaction. Th
 
 ## $AUVEN
 
-The $AUVEN mint is `DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump` on Solana. Link a Solana wallet in **Profile**, then open **$AUVEN** to read its balance. If the wallet holds tokens, choose one of your agents and create an ML-DSA-65 signed holder proof. It records a balance at one observed slot and does not move or lock tokens. Agent identity, controls, and signed activity do not require the token. Token payments, holder benefits, agent rentals, buybacks, and burns are not active. See the [product and token roadmap](https://auven.xyz/roadmap) for the proposed flow.
+The $AUVEN mint is `DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump` on Solana. Link a Solana wallet in **Profile**, then open **$AUVEN** to read its balance. If the wallet holds tokens, choose one of your agents and create an ML-DSA-65 signed holder proof. It records a balance at one observed slot and does not move or lock tokens. Agent identity, controls, and signed activity do not require the token.
+
+When the operator enables holder model access, the **$AUVEN** page shows the required balance and whether your linked wallet qualifies. Eligible users can choose the holder model in **Create agent → Run a controlled request**, or pass `model_tier: "holder"` to the gateway or MCP tool. AUVEN rechecks the linked wallet and balance before that request runs. Your agent's limits and approval rules still apply. If the page says holder benefits are in development, the model tier is not enabled yet. Token payments, extra request quotas, agent rentals, buybacks, and burns are not active. See the [product and token roadmap](https://auven.xyz/roadmap) for the proposed flow.
 
 ## Common errors
 
@@ -86,3 +88,5 @@ The $AUVEN mint is `DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump` on Solana. Lin
 | `token_mint_not_configured` | The site operator must configure the confirmed mint. |
 | `wallet_not_linked` | Link a Solana wallet in Profile. |
 | `token_balance_required` | The linked wallet has no balance of the configured mint at the observed slot. |
+| `holder_model_not_available` | The operator has not enabled the optional holder model tier. Use the standard model. |
+| `holder_balance_required` | Link an eligible Solana wallet or use the standard model. |

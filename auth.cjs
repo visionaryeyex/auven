@@ -51,4 +51,12 @@ async function userFromToken(token, sdk) {
   } catch { return null; }
 }
 
-module.exports = { configured, publicConfig, userFromToken, identities };
+async function walletsForUser(userId, sdk) {
+  if (!configured() || !/^did:privy:[a-zA-Z0-9]+$/.test(userId || '')) return [];
+  sdk ||= await client();
+  const user = await sdk.users()._get(userId);
+  if (user?.id !== userId) throw Error('privy_identity_mismatch');
+  return identities(user).wallets;
+}
+
+module.exports = { configured, publicConfig, userFromToken, walletsForUser, identities };

@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS events (id text PRIMARY KEY, workspace_id text NOT NU
 CREATE INDEX IF NOT EXISTS events_workspace_time_idx ON events(workspace_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS events_agent_time_idx ON events(agent_id,created_at);
 CREATE TABLE IF NOT EXISTS action_requests (id text PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces(id), agent_id text NOT NULL REFERENCES agents(id), event_id text NOT NULL UNIQUE REFERENCES events(id), messages_json text NOT NULL, max_tokens integer NOT NULL, status text NOT NULL CHECK (status IN ('pending','processing','completed','denied','failed')), result_json text, created_at text NOT NULL, decided_at text);
+ALTER TABLE events ADD COLUMN IF NOT EXISTS model_tier text NOT NULL DEFAULT 'standard';
+ALTER TABLE action_requests ADD COLUMN IF NOT EXISTS model_tier text NOT NULL DEFAULT 'standard';
 CREATE INDEX IF NOT EXISTS action_requests_workspace_time_idx ON action_requests(workspace_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS action_requests_agent_time_idx ON action_requests(agent_id,created_at DESC);
 CREATE TABLE IF NOT EXISTS proofs (id text PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces(id), agent_id text NOT NULL REFERENCES agents(id), kind text NOT NULL, payload text NOT NULL, signature text NOT NULL, public_key text NOT NULL, created_at text NOT NULL, tx_hash text, chain_status text, chain_signer text, chain_network text NOT NULL DEFAULT 'solana');

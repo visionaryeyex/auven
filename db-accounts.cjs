@@ -43,6 +43,11 @@ async function workspaceForAccount(accountId) {
   return (await pool.query('SELECT id,name FROM workspaces WHERE account_id=$1 LIMIT 1', [accountId])).rows[0] || null;
 }
 
+async function privyIdsForWorkspace(workspaceId) {
+  const result = await pool.query('SELECT p.privy_user_id FROM account_privy_users p JOIN workspaces w ON w.account_id=p.account_id WHERE w.id=$1', [workspaceId]);
+  return result.rows.map(row => row.privy_user_id);
+}
+
 async function createWorkspaceForAccount(accountId, name) {
   const token = secret();
   const row = { id: id(), name, account_id: accountId };
@@ -61,4 +66,4 @@ async function rotateWorkspaceToken(accountId) {
   return result.rowCount ? token : null;
 }
 
-module.exports = { resolveAccount, profile, workspaceForAccount, createWorkspaceForAccount, claimWorkspace, rotateWorkspaceToken };
+module.exports = { resolveAccount, profile, workspaceForAccount, privyIdsForWorkspace, createWorkspaceForAccount, claimWorkspace, rotateWorkspaceToken };

@@ -29,6 +29,9 @@ The existing `AUVEN_PRIVY_APP_ID` and `AUVEN_PRIVY_APP_SECRET` remain unchanged.
 | `AUVEN_PQ_SIGNING_SEED` | Stable ML-DSA-65 signing identity, 32 bytes as 64 hex characters |
 | `AUVEN_OPENAI_API_KEY` | Enables controlled OpenAI chat requests |
 | `AUVEN_MODEL` | Optional model override; defaults to `gpt-6.1-sol` |
+| `AUVEN_HOLDER_MIN_TOKENS` | Minimum $AUVEN balance in a Privy-linked Solana wallet for the optional holder model tier |
+| `AUVEN_HOLDER_MODEL` | Provider model for eligible holder requests; must support the configured Chat Completions route |
+| `AUVEN_HOLDER_ESTIMATE_MULTIPLIER` | Multiplier from 1 to 100 for the holder model's estimated budget; all three holder settings are required |
 | `AUVEN_SOLANA_RPC_URL` | Dedicated Solana RPC for proof publication and future token balance reads |
 | `AUVEN_SOLANA_SECRET_KEY` | Dedicated proof publisher's Base58 private key or 64-byte JSON secret array; required for publication only |
 | `AUVEN_SOLANA_TOKEN_MINT` | Optional override for the public $AUVEN mint embedded in the app |
@@ -48,6 +51,8 @@ New publication uses a signed Solana transaction containing one Memo instruction
 
 The $AUVEN Solana mint is `DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump`. It is embedded as the app default, so no Vercel mint variable is required. AUVEN checks the RPC genesis hash before reading the mint. Holder proofs record the linked wallet, mint, raw balance, observed slot, and time; they are snapshots and do not lock tokens. For reliable production reads, set `AUVEN_SOLANA_RPC_URL` to a dedicated Solana RPC endpoint.
 
+The holder model tier stays disabled until all three holder settings are provided. Before enabling it, confirm that the selected provider model is available to the OpenAI project and choose a conservative budget multiplier. AUVEN checks the current Privy-linked wallets and $AUVEN balance for every holder request and again before an approved request runs. The existing agent spending and approval policies still apply. This is model access only: it does not charge tokens or raise daily request limits.
+
 ## 5. Release check
 
 1. Run `npm ci`, `npm run build`, and `npm test`.
@@ -55,4 +60,4 @@ The $AUVEN Solana mint is `DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump`. It is 
 3. Sign in through Privy with an email account, link a Solana wallet from **Profile**, and confirm the same workspace remains accessible after refresh.
 5. Register an agent; check policy limits, owner approval, MCP status, Activity, export, and local ML-DSA verification.
 6. With the funded Solana publisher configured, publish one proof and verify the commitment through the UI and Explorer.
-7. Check the $AUVEN balance of a linked wallet and create one holder proof. Do not advertise holder benefits, payments, or burns as active.
+7. Check the $AUVEN balance of a linked wallet and create one holder proof. If the holder model tier is configured, run one eligible holder request and confirm its model in Activity and the provider response. Do not advertise payments or burns as active.

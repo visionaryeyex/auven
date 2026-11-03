@@ -29,7 +29,7 @@ The [interactive demo](https://auven.xyz/demo) shows policy decisions and owner 
 
 Privy email sign-in remains available. Solana wallet sign-in and wallet linking use the existing Privy application. The wallet chooser offers Backpack and other supported Solana wallets.
 
-The $AUVEN mint on Solana is [`DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump`](https://explorer.solana.com/address/DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump). Its onchain metadata identifies **Auven / AUVEN**; it uses Token-2022 with 6 decimals. AUVEN reads this mint for linked wallet balances and can sign a holder snapshot for a registered agent. Token payments, holder quotas, agent rental, buybacks, and burns are not active features. Agent controls and signed activity work independently of the token. The [product and token roadmap](https://auven.xyz/roadmap) shows current features and planned work.
+The $AUVEN mint on Solana is [`DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump`](https://explorer.solana.com/address/DXf5UDjzYFEizcroAHx1jhtFLf6EEuWcSokgNfAhpump). Its onchain metadata identifies **Auven / AUVEN**; it uses Token-2022 with 6 decimals. AUVEN reads this mint for linked wallet balances and can sign a holder snapshot for a registered agent. The gateway also supports an optional holder model tier, disabled until the operator sets its minimum balance and provider model. The server rechecks linked wallets and the onchain balance for holder requests, including requests awaiting approval. Token payments, holder quotas, agent rental, buybacks, and burns are not active features. Agent controls and signed activity work independently of the token. The [product and token roadmap](https://auven.xyz/roadmap) shows current features and planned work.
 
 ## Run locally
 
@@ -97,6 +97,9 @@ Vercel serves the public pages and API. Supabase PostgreSQL stores hosted data; 
 | `AUVEN_PQ_SIGNING_SEED` | Stable ML-DSA-65 signing identity |
 | `AUVEN_OPENAI_API_KEY` | Controlled OpenAI chat route |
 | `AUVEN_MODEL` | Optional model override |
+| `AUVEN_HOLDER_MIN_TOKENS` | Minimum linked-wallet $AUVEN balance for optional holder model access; requires `AUVEN_HOLDER_MODEL` |
+| `AUVEN_HOLDER_MODEL` | Chat Completions model available to eligible holders |
+| `AUVEN_HOLDER_ESTIMATE_MULTIPLIER` | Conservative multiplier (1-100) for the holder model's estimated agent budget; all three holder settings are required |
 | `AUVEN_SETUP_TOKEN` | Optional legacy workspace bootstrap |
 | `AUVEN_SOLANA_RPC_URL` | Dedicated Solana RPC for publication and token reads |
 | `AUVEN_SOLANA_SECRET_KEY` | Dedicated funded Solana proof publisher; required only for publication |
