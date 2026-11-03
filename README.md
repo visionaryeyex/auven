@@ -99,7 +99,8 @@ Vercel serves the public pages and API. Supabase PostgreSQL stores hosted data; 
 | `AUVEN_MODEL` | Optional model override |
 | `AUVEN_HOLDER_MIN_TOKENS` | Minimum linked-wallet $AUVEN balance for optional holder model access; requires `AUVEN_HOLDER_MODEL` |
 | `AUVEN_HOLDER_MODEL` | Chat Completions model available to eligible holders |
-| `AUVEN_HOLDER_ESTIMATE_MULTIPLIER` | Conservative multiplier (1-100) for the holder model's estimated agent budget; all three holder settings are required |
+| `AUVEN_HOLDER_ESTIMATE_MULTIPLIER` | Conservative multiplier (1-100) for the holder model's estimated agent budget |
+| `AUVEN_HOLDER_DAILY_REQUEST_LIMIT` | Maximum holder model requests per workspace per UTC day (1-100); all four holder settings are required |
 | `AUVEN_SETUP_TOKEN` | Optional legacy workspace bootstrap |
 | `AUVEN_SOLANA_RPC_URL` | Dedicated Solana RPC for publication and token reads |
 | `AUVEN_SOLANA_SECRET_KEY` | Dedicated funded Solana proof publisher; required only for publication |

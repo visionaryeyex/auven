@@ -12,7 +12,7 @@ async function admin(req,res){
 }
 const amount=n=>Number.isInteger(n)&&n>=0&&n<=100000000;
 async function providerCompletion(messages,maxTokens,selectedModel=model){
-  try{const upstream=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{authorization:`Bearer ${providerKey}`,'content-type':'application/json'},body:JSON.stringify({model:selectedModel,messages,max_completion_tokens:maxTokens,...(selectedModel==='gpt-6.1-sol'?{reasoning_effort:'low'}:{})}),signal:AbortSignal.timeout(55000)});const result=await upstream.json();if(upstream.ok)return {result};
+  try{const upstream=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{authorization:`Bearer ${providerKey}`,'content-type':'application/json'},body:JSON.stringify({model:selectedModel,messages,max_completion_tokens:maxTokens,...(['gpt-6.1-sol','gpt-6-astra'].includes(selectedModel)?{reasoning_effort:'low'}:{})}),signal:AbortSignal.timeout(55000)});const result=await upstream.json();if(upstream.ok)return {result};
     const code=typeof result?.error?.code==='string'?result.error.code:'';
     const error=upstream.status===401||upstream.status===403?'provider_auth_failed':code==='insufficient_quota'?'provider_quota_exceeded':upstream.status===429?'provider_rate_limited':code==='model_not_found'||upstream.status===404?'provider_model_unavailable':upstream.status===400?'provider_request_rejected':'provider_error';
     console.error('OpenAI request rejected',{status:upstream.status,code,error});
@@ -26,7 +26,7 @@ async function modelFor(workspaceId,tier){
   if(tier!=='holder')return {status:400,error:'invalid_model_tier'};
   if(!Holder.config().enabled)return {status:409,error:'holder_model_not_available'};
   if(!Accounts)return {status:403,error:'verified_account_required'};
-  try{const access=await Holder.forWorkspace(workspaceId,Accounts,Auth,Token);return access.eligible?{model:Holder.config().model,multiplier:Holder.config().multiplier}:{status:403,error:'holder_balance_required'}}
+  try{const access=await Holder.forWorkspace(workspaceId,Accounts,Auth,Token);return access.eligible?{model:Holder.config().model,multiplier:Holder.config().multiplier,dailyLimit:Holder.config().dailyLimit}:{status:403,error:'holder_balance_required'}}
   catch{return {status:503,error:'holder_status_unavailable'}}
 }
 async function runGateway(agent,input,requestId){
@@ -41,7 +41,7 @@ async function runGateway(agent,input,requestId){
   if(!providerKey)return {status:503,data:{error:'provider_not_configured'}};
   const tier=input.model_tier??'standard',choice=await modelFor(agent.workspace_id,tier);
   if(choice.error)return {status:choice.status,data:{error:choice.error}};
-  const estimate=Math.ceil(input.max_tokens*0.2*choice.multiplier),outcome=await D.reserve(agent,requestId,estimate,{max_tokens:input.max_tokens,messages,model_tier:tier});
+  const estimate=Math.ceil(input.max_tokens*0.2*choice.multiplier),outcome=await D.reserve(agent,requestId,estimate,{max_tokens:input.max_tokens,messages,model_tier:tier,holder_daily_limit:choice.dailyLimit});
   if(outcome.existing)return {status:409,data:{error:'duplicate_request',event:outcome.existing}};
   const event=outcome.event;
   if(event.decision==='denied')return {status:403,data:{error:event.reason,event_id:event.id}};
@@ -64,7 +64,11 @@ if(!D)return send(res,503,{error:'database_not_configured'});
 if(p==='/api/me'&&m==='GET'){const owner=await account(req);if(!owner)return send(res,401,{error:'invalid_session'});return send(res,200,await Accounts.profile(owner.id,owner.user))}
 if(p==='/api/token/status'&&m==='GET'){
   const owner=await account(req);if(!owner)return send(res,401,{error:'invalid_session'});
-  try{const snapshot=await Token.readWallets(owner.user.wallets);return send(res,200,{...snapshot,benefits:Holder.evaluate(snapshot)})}
+  try{
+    const snapshot=await Token.readWallets(owner.user.wallets),benefits=Holder.evaluate(snapshot);
+    if(benefits.enabled){const workspace=await Accounts.workspaceForAccount(owner.id);const used=workspace?await D.countHolderRequests(workspace.id):0;benefits.used_today=used;benefits.remaining_today=Math.max(0,benefits.daily_request_limit-used)}
+    return send(res,200,{...snapshot,benefits})
+  }
   catch(error){return send(res,503,{error:['wrong_token_chain','invalid_token_mint'].includes(error.message)?error.message:'token_rpc_unavailable'})}
 }
 if(p==='/api/token/attest'&&m==='POST'){

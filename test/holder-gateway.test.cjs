@@ -7,6 +7,7 @@ process.env.AUVEN_PRIVY_APP_SECRET = 'test-secret';
 process.env.AUVEN_HOLDER_MIN_TOKENS = '10';
 process.env.AUVEN_HOLDER_MODEL = 'approved-holder-model';
 process.env.AUVEN_HOLDER_ESTIMATE_MULTIPLIER = '2';
+process.env.AUVEN_HOLDER_DAILY_REQUEST_LIMIT = '3';
 const D = require('../db-postgres.cjs');
 const Accounts = require('../db-accounts.cjs');
 const Auth = require('../auth.cjs');
@@ -26,8 +27,10 @@ test('holder route checks linked wallet and onchain balance before the provider,
   const original = {
     ensureSchema: D.ensureSchema, agentByToken: D.agentByToken, workspace: D.workspace,
     reserve: D.reserve, settle: D.settle, pendingAction: D.pendingAction, claimAction: D.claimAction,
-    finishAction: D.finishAction, privyIdsForWorkspace: Accounts.privyIdsForWorkspace,
-    walletsForUser: Auth.walletsForUser, readWallets: Token.readWallets, fetch: global.fetch
+    finishAction: D.finishAction, countHolderRequests: D.countHolderRequests,
+    privyIdsForWorkspace: Accounts.privyIdsForWorkspace, resolveAccount: Accounts.resolveAccount,
+    workspaceForAccount: Accounts.workspaceForAccount, walletsForUser: Auth.walletsForUser,
+    userFromToken: Auth.userFromToken, readWallets: Token.readWallets, fetch: global.fetch
   };
   let balance = '0', providerCalls = 0, reservations = 0;
   D.ensureSchema = async () => {};
@@ -36,11 +39,15 @@ test('holder route checks linked wallet and onchain balance before the provider,
   Accounts.privyIdsForWorkspace = async () => ['did:privy:owner'];
   Auth.walletsForUser = async () => ['verified-wallet'];
   Token.readWallets = async wallets => { assert.deepEqual(wallets, ['verified-wallet']); return { total_balance_raw: balance, total_balance: '10', decimals: 6 }; };
-  D.reserve = async (_agent, _id, _amount, request) => { reservations++; assert.equal(request.model_tier, 'holder'); return { event: { id: 'event-1', decision: 'reserved' } }; };
+  D.reserve = async (_agent, _id, _amount, request) => { reservations++; assert.equal(request.model_tier, 'holder'); assert.equal(request.holder_daily_limit, 3); return { event: { id: 'event-1', decision: 'reserved' } }; };
   D.settle = async () => {};
   D.pendingAction = async () => ({ id: 'action-1', model_tier: 'holder' });
   D.claimAction = async () => ({ id: 'action-1', event_id: 'event-1', max_tokens: 100, messages_json: '[{"role":"user","content":"Hi"}]' });
   D.finishAction = async () => {};
+  D.countHolderRequests = async id => { assert.equal(id, 'workspace-1'); return 2; };
+  Accounts.resolveAccount = async () => 'account-1';
+  Accounts.workspaceForAccount = async () => ({ id: 'workspace-1' });
+  Auth.userFromToken = async () => ({ id: 'did:privy:owner', wallets: ['verified-wallet'] });
   global.fetch = async (_url, options) => { providerCalls++; assert.equal(JSON.parse(options.body).model, 'approved-holder-model'); return { ok: true, json: async () => ({ usage: { total_tokens: 20 }, choices: [{ message: { content: 'OK' } }] }) }; };
   try {
     const body = { messages: [{ role: 'user', content: 'Hi' }], max_tokens: 100, model_tier: 'holder', wallet: 'spoofed-wallet' };
@@ -62,10 +69,17 @@ test('holder route checks linked wallet and onchain balance before the provider,
     const approved = await call('POST', '/api/actions/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/decision', { decision: 'approve' }, 'admin-token');
     assert.equal(approved.httpStatus, 200);
     assert.equal(providerCalls, 2);
+    const status = await call('GET', '/api/token/status', undefined, 'identity-token');
+    assert.equal(status.httpStatus, 200);
+    assert.equal(status.benefits.daily_request_limit, 3);
+    assert.equal(status.benefits.remaining_today, 1);
   } finally {
-    Object.assign(D, Object.fromEntries(Object.entries(original).filter(([key]) => ['ensureSchema','agentByToken','workspace','reserve','settle','pendingAction','claimAction','finishAction'].includes(key))));
+    Object.assign(D, Object.fromEntries(Object.entries(original).filter(([key]) => ['ensureSchema','agentByToken','workspace','reserve','settle','pendingAction','claimAction','finishAction','countHolderRequests'].includes(key))));
     Accounts.privyIdsForWorkspace = original.privyIdsForWorkspace;
+    Accounts.resolveAccount = original.resolveAccount;
+    Accounts.workspaceForAccount = original.workspaceForAccount;
     Auth.walletsForUser = original.walletsForUser;
+    Auth.userFromToken = original.userFromToken;
     Token.readWallets = original.readWallets;
     global.fetch = original.fetch;
     await D.pool.end();

@@ -38,7 +38,8 @@ function reserve(agent,requestId,amount,request={}){db.exec('BEGIN IMMEDIATE');t
   const live=db.prepare('SELECT status,daily_limit,daily_request_limit,max_tokens_per_request,approval_required FROM agents WHERE id=?').get(agent.id);
   const today=new Date().toISOString().slice(0,10);
   const totals=db.prepare("SELECT COALESCE(SUM(reserved),0) spent,COUNT(*) calls FROM events WHERE agent_id=? AND decision IN ('reserved','allowed','pending') AND created_at>=?").get(agent.id,today);
-  const reason=live.status!=='active'?'agent_stopped':request.max_tokens>live.max_tokens_per_request?'token_limit_exceeded':totals.calls>=live.daily_request_limit?'request_limit_exceeded':totals.spent+amount>live.daily_limit?'budget_exceeded':live.approval_required&&request.messages?'approval_required':'policy_allowed';
+  const holderCalls=request.model_tier==='holder'?db.prepare("SELECT COUNT(*) calls FROM events WHERE workspace_id=? AND model_tier='holder' AND decision IN ('reserved','allowed','pending','failed') AND created_at>=?").get(agent.workspace_id,today).calls:0;
+  const reason=live.status!=='active'?'agent_stopped':request.max_tokens>live.max_tokens_per_request?'token_limit_exceeded':request.model_tier==='holder'&&holderCalls>=request.holder_daily_limit?'holder_daily_limit_exceeded':totals.calls>=live.daily_request_limit?'request_limit_exceeded':totals.spent+amount>live.daily_limit?'budget_exceeded':live.approval_required&&request.messages?'approval_required':'policy_allowed';
   const decision=reason==='policy_allowed'?'reserved':reason==='approval_required'?'pending':'denied';
   const event={id:id(),workspace_id:agent.workspace_id,agent_id:agent.id,request_id:requestId,decision,reason,reserved:decision==='denied'?0:amount,actual:0,created_at:new Date().toISOString()};
   db.prepare('INSERT INTO events(id,workspace_id,agent_id,request_id,decision,reason,reserved,actual,created_at,model_tier) VALUES(?,?,?,?,?,?,?,?,?,?)').run(event.id,event.workspace_id,event.agent_id,requestId,decision,reason,event.reserved,0,event.created_at,request.model_tier||'standard');
@@ -54,7 +55,7 @@ function claimAction(workspaceId,actionId){db.exec('BEGIN IMMEDIATE');try{
   if(!row){db.exec('COMMIT');return null}
   const today=new Date().toISOString().slice(0,10),totals=db.prepare("SELECT COALESCE(SUM(reserved),0) spent,COUNT(*) calls FROM events WHERE agent_id=? AND decision IN ('reserved','allowed','pending') AND created_at>=?").get(row.agent_id,today);
   const old=row.created_at.slice(0,10)<today;
-  if(row.agent_status!=='active'||row.max_tokens>row.max_tokens_per_request||Number(totals.calls)+(old?1:0)>row.daily_request_limit||Number(totals.spent)+(old?row.estimate:0)>row.daily_limit){db.exec('COMMIT');return null}
+  if(row.agent_status!=='active'||row.max_tokens>row.max_tokens_per_request||Number(totals.calls)+(old?1:0)>row.daily_request_limit||Number(totals.spent)+(old?row.estimate:0)>row.daily_limit||row.model_tier==='holder'&&old){db.exec('COMMIT');return null}
   db.prepare("UPDATE action_requests SET status='processing',decided_at=? WHERE id=?").run(new Date().toISOString(),actionId);
   db.exec('COMMIT');return row
 }catch(e){db.exec('ROLLBACK');throw e}}

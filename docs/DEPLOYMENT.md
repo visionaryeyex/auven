@@ -31,12 +31,15 @@ The existing `AUVEN_PRIVY_APP_ID` and `AUVEN_PRIVY_APP_SECRET` remain unchanged.
 | `AUVEN_MODEL` | Optional model override; defaults to `gpt-6.1-sol` |
 | `AUVEN_HOLDER_MIN_TOKENS` | Minimum $AUVEN balance in a Privy-linked Solana wallet for the optional holder model tier |
 | `AUVEN_HOLDER_MODEL` | Provider model for eligible holder requests; must support the configured Chat Completions route |
-| `AUVEN_HOLDER_ESTIMATE_MULTIPLIER` | Multiplier from 1 to 100 for the holder model's estimated budget; all three holder settings are required |
+| `AUVEN_HOLDER_ESTIMATE_MULTIPLIER` | Multiplier from 1 to 100 for the holder model's estimated budget |
+| `AUVEN_HOLDER_DAILY_REQUEST_LIMIT` | Maximum holder model requests per workspace per UTC day, from 1 to 100; all four holder settings are required |
 | `AUVEN_SOLANA_RPC_URL` | Dedicated Solana RPC for proof publication and future token balance reads |
 | `AUVEN_SOLANA_SECRET_KEY` | Dedicated proof publisher's Base58 private key or 64-byte JSON secret array; required for publication only |
 | `AUVEN_SOLANA_TOKEN_MINT` | Optional override for the public $AUVEN mint embedded in the app |
 
 Keep server credentials Sensitive. The Solana RPC endpoint may itself contain a provider key, so keep it server-side. The Solana secret must belong to a new, dedicated wallet funded with enough SOL for transaction fees. Never use your personal wallet secret or a Privy user wallet secret.
+
+The initial holder-tier launch configuration is **1,000,000 $AUVEN** held across verified wallets linked to the workspace, `gpt-6-astra` as the holder model, an estimated budget multiplier of `5`, and **3 holder requests per workspace per UTC day**. Set all four `AUVEN_HOLDER_*` variables to enable it. The daily cap applies across the workspace's agents; individual agent budgets, request limits, and approvals can be stricter. Holding tokens does not spend or lock them. Before enabling this route, confirm that the OpenAI project can call the model, check provider spend limits, and run a real request in a production workspace.
 
 The old `AUVEN_RH_PRIVATE_KEY`, `AUVEN_RH_RPC_URL`, and `AUVEN_RH_REGISTRY_ADDRESS` are not used for new publications. The old RPC can remain temporarily if you need to verify existing records, because the legacy verifier still reads it. Remove the old private key from Vercel after verifying that no old publication path uses it. Changing Vercel variables requires a redeploy.
 

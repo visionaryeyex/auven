@@ -4,11 +4,13 @@ function config() {
   const minimum = (process.env.AUVEN_HOLDER_MIN_TOKENS || '').trim();
   const model = (process.env.AUVEN_HOLDER_MODEL || '').trim();
   const multiplier = Number(process.env.AUVEN_HOLDER_ESTIMATE_MULTIPLIER);
+  const dailyLimit = Number(process.env.AUVEN_HOLDER_DAILY_REQUEST_LIMIT);
   return {
-    enabled: Boolean(minimum && model && /^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(minimum) && Number(minimum) > 0 && Number.isFinite(multiplier) && multiplier >= 1 && multiplier <= 100),
+    enabled: Boolean(minimum && model && /^(?:0|[1-9]\d*)(?:\.\d{1,6})?$/.test(minimum) && Number(minimum) > 0 && Number.isFinite(multiplier) && multiplier >= 1 && multiplier <= 100 && Number.isInteger(dailyLimit) && dailyLimit >= 1 && dailyLimit <= 100),
     minimum,
     model,
-    multiplier
+    multiplier,
+    dailyLimit
   };
 }
 
@@ -29,6 +31,7 @@ function evaluate(snapshot) {
     eligible: balance >= minimum,
     minimum_tokens: policy.minimum,
     model: policy.model,
+    daily_request_limit: policy.dailyLimit,
     balance: snapshot.total_balance || '0',
     observed_slot: snapshot.slot || null
   };
