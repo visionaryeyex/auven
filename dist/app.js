@@ -4,7 +4,7 @@ async function waitFor(promise,ms,message){let timer;try{return await Promise.ra
 async function api(path,options={}){await ensureAuth();const jwt=await window.auvenAuth.accessToken();const bearer=jwt||(window.auvenAuth.signedIn()?null:token);const r=await fetch('/api'+path,{...options,headers:{'content-type':'application/json',...(bearer?{authorization:'Bearer '+bearer}:{}),...options.headers}});let data=await r.json();if(!r.ok)throw Error(data.error||'request_failed');return data}
 const workspacePages=new Set(['overview','agents','create','policies','approvals','activity','proofs','token','discover','settings']);
 let renderVersion=0;
-function pageFromUrl(){const match=location.pathname.match(/^\/workspace(?:\/([^/]+))?\/?$/);return match?(workspacePages.has(match[1])?match[1]:'overview'):null}
+function pageFromUrl(){const match=location.pathname.match(/^\/workspace(?:\/([^/]+))?\/?$/);return match?(match[1]==='marketplace'?'discover':workspacePages.has(match[1])?match[1]:'overview'):null}
 function openApp(page='overview',historyMode='push'){site.hidden=true;app.hidden=false;window.scrollTo({top:0,behavior:'instant'});render(page,historyMode)}
 function home(e){e.preventDefault();renderVersion++;app.hidden=true;site.hidden=false;if(location.pathname!=='/'||location.search)history.pushState(null,'','/');window.scrollTo({top:0,behavior:'instant'})}
 document.querySelectorAll('[data-app]').forEach(b=>b.onclick=()=>openApp(b.dataset.openPage||'overview'));
@@ -165,7 +165,7 @@ async function render(page,historyMode='push'){
   const version=++renderVersion;
   const active=()=>version===renderVersion&&!app.hidden;
   current=page;
-  const path='/workspace/'+page;
+  const path='/workspace/'+(page==='discover'?'marketplace':page);
   if(historyMode!=='none'&&(location.pathname!==path||location.search))history[historyMode==='replace'?'replaceState':'pushState']({page},'',path);
   document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
   content.innerHTML='<div class="page-top"><h1>Opening '+esc(sectionGuides[page]?.title||'workspace')+'</h1></div>';

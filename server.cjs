@@ -31,6 +31,7 @@ http.createServer((req, res) => {
   }
   const url = new URL(req.url, 'http://127.0.0.1');
   const pathname = url.pathname;
+  if (pathname === '/workspace/discover') { res.writeHead(308, {location: '/workspace/marketplace' + url.search}); return res.end(); }
   if (pathname === '/index.html' || pathname === '/roadmap.html' || pathname === '/roadmap/' || pathname === '/token' || pathname === '/token.html' || pathname === '/token/' || pathname === '/demo.html' || pathname === '/demo/' || pathname === '/index') {
     const target = pathname.startsWith('/token') || pathname.startsWith('/roadmap') ? '/roadmap' : pathname.startsWith('/demo') ? '/demo' : '/';
     res.writeHead(308, {location: target + url.search});

@@ -7,6 +7,7 @@ const route = require('../api/route.js');
 test('workspace deep links rewrite to the clean root page', () => {
   const config = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'vercel.json'), 'utf8'));
   assert.equal(config.cleanUrls, true);
+  assert.deepEqual(config.redirects.find(item => item.source === '/workspace/discover'), {source:'/workspace/discover',destination:'/workspace/marketplace',permanent:true});
   for (const source of ['/workspace', '/workspace/:section']) {
     assert.deepEqual(config.rewrites.find(item => item.source === source), { source, destination: '/' });
   }
