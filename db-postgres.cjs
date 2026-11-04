@@ -16,6 +16,9 @@ function ensureSchema(){
       await client.query('ALTER TABLE agents ADD COLUMN IF NOT EXISTS config_version integer NOT NULL DEFAULT 1');
       await client.query("ALTER TABLE events ADD COLUMN IF NOT EXISTS model_tier text NOT NULL DEFAULT 'standard'");
       await client.query("ALTER TABLE action_requests ADD COLUMN IF NOT EXISTS model_tier text NOT NULL DEFAULT 'standard'");
+      await client.query('CREATE TABLE IF NOT EXISTS marketplace_listings(id text PRIMARY KEY,workspace_id text NOT NULL REFERENCES workspaces(id),agent_id text NOT NULL UNIQUE REFERENCES agents(id),category text NOT NULL,description text NOT NULL,passport text NOT NULL,created_at text NOT NULL)');
+      await client.query('ALTER TABLE marketplace_listings ENABLE ROW LEVEL SECURITY');
+      await client.query('REVOKE ALL ON marketplace_listings FROM PUBLIC, anon, authenticated');
       const column=(await client.query("SELECT column_default,is_nullable FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='proofs' AND column_name='chain_network'")).rows[0];
       const constraint=(await client.query("SELECT 1 FROM pg_constraint WHERE conname='account_wallets_lowercase' AND conrelid='account_wallets'::regclass")).rowCount;
       if(!column || column.column_default!=="'solana'::text" || column.is_nullable!=='NO' || constraint){
@@ -83,3 +86,7 @@ async function updateProof(id,status,txHash=null,signer=null,target=null,network
 async function agentOwned(w,a){return !!await one('SELECT id FROM agents WHERE id=$1 AND workspace_id=$2',[a,w])}
 async function checkpointEvents(a){return many('SELECT id,decision,reason,reserved,actual,created_at FROM events WHERE agent_id=$1 ORDER BY created_at,id',[a])}
 module.exports={pool,ensureSchema,hash,id,workspace,agentByToken,countWorkspaces,createWorkspace,createAgent,listAgents,getAgent,markMcpConnection,rotateAgentCredential,setAgentStatus,setAgentPolicy,listEvents,countHolderRequests,reserve,settle,createProof,listProofs,getProof,claimProof,updateProof,agentOwned,checkpointEvents,listActions,actionForAgent,pendingAction,claimAction,denyAction,finishAction};
+async function createListing(w,a,category,description,passport){const listingId=id();await run('INSERT INTO marketplace_listings(id,workspace_id,agent_id,category,description,passport,created_at) VALUES($1,$2,$3,$4,$5,$6,$7)',[listingId,w,a,category,description,JSON.stringify(passport),new Date().toISOString()]);return listingId}
+async function listMarketplace(){return many("SELECT l.id,l.category,l.description,l.passport,l.created_at,a.name FROM marketplace_listings l JOIN agents a ON a.id=l.agent_id WHERE a.status='active' ORDER BY l.created_at DESC LIMIT 100")}
+async function deleteListing(w,listingId){return run('DELETE FROM marketplace_listings WHERE workspace_id=$1 AND id=$2',[w,listingId])}
+Object.assign(module.exports,{createListing,listMarketplace,deleteListing});

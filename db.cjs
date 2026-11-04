@@ -19,6 +19,7 @@ for(const table of ['events','action_requests']){
   if(!db.prepare(`PRAGMA table_info(${table})`).all().some(c=>c.name==='model_tier'))db.exec(`ALTER TABLE ${table} ADD COLUMN model_tier TEXT NOT NULL DEFAULT 'standard'`);
 }
 const hash=s=>createHash('sha256').update(s).digest('hex');
+db.exec('CREATE TABLE IF NOT EXISTS marketplace_listings(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,agent_id TEXT NOT NULL UNIQUE,category TEXT NOT NULL,description TEXT NOT NULL,passport TEXT NOT NULL,created_at TEXT NOT NULL,FOREIGN KEY(workspace_id) REFERENCES workspaces(id),FOREIGN KEY(agent_id) REFERENCES agents(id))');
 const secret=()=>randomBytes(32).toString('base64url');
 const id=()=>randomBytes(16).toString('hex');
 function eq(a,b){const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y)}
@@ -71,3 +72,7 @@ function updateProof(proofId,status,txHash=null,signer=null,target=null,network=
 function agentOwned(workspaceId,agentId){return !!db.prepare('SELECT id FROM agents WHERE id=? AND workspace_id=?').get(agentId,workspaceId)}
 function checkpointEvents(agentId){return db.prepare('SELECT id,decision,reason,reserved,actual,created_at FROM events WHERE agent_id=? ORDER BY created_at,id').all(agentId)}
 module.exports={db,dir,hash,workspace,agentByToken,createWorkspace,createAgent,listAgents,getAgent,markMcpConnection,rotateAgentCredential,setAgentStatus,setAgentPolicy,listEvents,reserve,settle,id,countWorkspaces,createProof,listProofs,getProof,claimProof,updateProof,agentOwned,checkpointEvents,listActions,actionForAgent,pendingAction,claimAction,denyAction,finishAction};
+function createListing(w,a,category,description,passport){const listingId=id();db.prepare('INSERT INTO marketplace_listings(id,workspace_id,agent_id,category,description,passport,created_at) VALUES(?,?,?,?,?,?,?)').run(listingId,w,a,category,description,JSON.stringify(passport),new Date().toISOString());return listingId}
+function listMarketplace(){return db.prepare("SELECT l.id,l.category,l.description,l.passport,l.created_at,a.name FROM marketplace_listings l JOIN agents a ON a.id=l.agent_id WHERE a.status='active' ORDER BY l.created_at DESC LIMIT 100").all()}
+function deleteListing(w,listingId){return db.prepare('DELETE FROM marketplace_listings WHERE workspace_id=? AND id=?').run(w,listingId).changes}
+Object.assign(module.exports,{createListing,listMarketplace,deleteListing});

@@ -1,5 +1,8 @@
 CREATE TABLE IF NOT EXISTS workspaces (id text PRIMARY KEY, name text NOT NULL, admin_hash text NOT NULL UNIQUE);
 CREATE TABLE IF NOT EXISTS agents (id text PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces(id), name text NOT NULL, purpose text NOT NULL, status text NOT NULL DEFAULT 'active' CHECK (status IN ('active','stopped')), daily_limit integer NOT NULL CHECK (daily_limit >= 0), credential_hash text NOT NULL UNIQUE, created_at text NOT NULL);
+CREATE TABLE IF NOT EXISTS marketplace_listings (id text PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces(id), agent_id text NOT NULL UNIQUE REFERENCES agents(id), category text NOT NULL, description text NOT NULL, passport text NOT NULL, created_at text NOT NULL);
+ALTER TABLE marketplace_listings ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON marketplace_listings FROM PUBLIC, anon, authenticated;
 CREATE INDEX IF NOT EXISTS agents_workspace_idx ON agents(workspace_id);
 ALTER TABLE agents ADD COLUMN IF NOT EXISTS daily_request_limit integer NOT NULL DEFAULT 100 CHECK (daily_request_limit BETWEEN 0 AND 10000);
 ALTER TABLE agents ADD COLUMN IF NOT EXISTS max_tokens_per_request integer NOT NULL DEFAULT 4096 CHECK (max_tokens_per_request BETWEEN 1 AND 4096);

@@ -61,6 +61,21 @@ if(p==='/api/auth/config'&&m==='GET')return send(res,200,Auth.publicConfig());
 if(p==='/api/ready'&&m==='GET'){if(!D)return send(res,503,{ok:false,database:'not_configured'});if(D.pool)await D.pool.query('SELECT proofs.chain_network,account_wallets.address,agents.mcp_last_seen FROM accounts,account_privy_users,workspaces,proofs,account_wallets,agents LIMIT 0');return send(res,200,{ok:true,database:'ready'})}
 if(p==='/api/verify'&&m==='POST'){const b=await body(req);return send(res,200,{signature_valid:await P.verify(b),onchain_verified:false})}
 if(!D)return send(res,503,{error:'database_not_configured'});
+if(p==='/api/marketplace'&&m==='GET'){
+  const rows=await D.listMarketplace();
+  return send(res,200,{listings:rows.map(row=>({...row,passport:JSON.parse(row.passport)}))});
+}
+if(p==='/api/marketplace'&&m==='POST'){
+  const w=await admin(req,res);if(!w)return;
+  const b=await body(req),categories=['Research','Writing','Coding','Support','Data','Operations'];
+  if(typeof b.agent_id!=='string'||!categories.includes(b.category)||typeof b.description!=='string'||b.description.trim().length<10||b.description.trim().length>500)return send(res,400,{error:'invalid_listing'});
+  const agent=await D.getAgent(w.id,b.agent_id);if(!agent)return send(res,404,{error:'agent_not_found'});
+  if(agent.status!=='active')return send(res,409,{error:'agent_stopped'});
+  const passport=await P.sign({type:'marketplace_agent_identity',version:1,agent_id:agent.id,name:agent.name,category:b.category,description:b.description.trim(),created_at:new Date().toISOString()});
+  try{const id=await D.createListing(w.id,agent.id,b.category,b.description.trim(),passport);return send(res,201,{id,passport})}
+  catch(error){if(error.code==='23505'||String(error.message).includes('UNIQUE constraint'))return send(res,409,{error:'agent_already_listed'});throw error}
+}
+const listing=p.match(/^\/api\/marketplace\/([a-f0-9]{32})$/);if(listing&&m==='DELETE'){const w=await admin(req,res);if(!w)return;return await D.deleteListing(w.id,listing[1])?send(res,200,{removed:true}):send(res,404,{error:'listing_not_found'})}
 if(p==='/api/me'&&m==='GET'){const owner=await account(req);if(!owner)return send(res,401,{error:'invalid_session'});return send(res,200,await Accounts.profile(owner.id,owner.user))}
 if(p==='/api/token/status'&&m==='GET'){
   const owner=await account(req);if(!owner)return send(res,401,{error:'invalid_session'});
