@@ -50,4 +50,10 @@ async function verify(bundle) {
   } catch { return false; }
 }
 
-module.exports = { sign, verify };
+async function verifyIssued(bundle) {
+  const pair = await keys();
+  if (typeof bundle?.public_key !== 'string' || bundle.public_key !== Buffer.from(pair.publicKey).toString('base64')) return false;
+  return verify(bundle);
+}
+
+module.exports = { sign, verify, verifyIssued };

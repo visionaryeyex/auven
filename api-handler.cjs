@@ -65,6 +65,12 @@ if(p==='/api/marketplace'&&m==='GET'){
   const rows=await D.listMarketplace();
   return send(res,200,{listings:rows.map(row=>({...row,passport:JSON.parse(row.passport)}))});
 }
+const verifyListing=p.match(/^\/api\/marketplace\/([a-f0-9]{32})\/verify$/);if(verifyListing&&m==='GET'){
+  const row=await D.getPublicListing(verifyListing[1]);if(!row)return send(res,404,{error:'listing_not_found'});
+  const passport=JSON.parse(row.passport),payload=passport.payload;
+  const fields_match=payload?.type==='marketplace_agent_identity'&&payload.agent_id===row.agent_id&&payload.name===row.name&&payload.category===row.category&&payload.description===row.description;
+  return send(res,200,{signature_valid:fields_match&&await P.verifyIssued(passport),fields_match});
+}
 if(p==='/api/marketplace'&&m==='POST'){
   const w=await admin(req,res);if(!w)return;
   const b=await body(req),categories=['Research','Writing','Coding','Support','Data','Operations'];
@@ -75,7 +81,41 @@ if(p==='/api/marketplace'&&m==='POST'){
   try{const id=await D.createListing(w.id,agent.id,b.category,b.description.trim(),passport);return send(res,201,{id,passport})}
   catch(error){if(error.code==='23505'||String(error.message).includes('UNIQUE constraint'))return send(res,409,{error:'agent_already_listed'});throw error}
 }
-const listing=p.match(/^\/api\/marketplace\/([a-f0-9]{32})$/);if(listing&&m==='DELETE'){const w=await admin(req,res);if(!w)return;return await D.deleteListing(w.id,listing[1])?send(res,200,{removed:true}):send(res,404,{error:'listing_not_found'})}
+const listing=p.match(/^\/api\/marketplace\/([a-f0-9]{32})$/);if(listing&&m==='DELETE'){const w=await admin(req,res);if(!w)return;return await D.deleteListing(w.id,listing[1])?send(res,200,{removed:true}):send(res,409,{error:'listing_removal_unavailable'})}
+if(p==='/api/marketplace/access'&&m==='GET'){const w=await admin(req,res);if(!w)return;return send(res,200,{requests:await D.marketplaceRequests(w.id),execution_available:process.env.AUVEN_MARKETPLACE_EXECUTION==='enabled'})}
+const accessRequest=p.match(/^\/api\/marketplace\/([a-f0-9]{32})\/access$/);if(accessRequest&&m==='POST'){
+  const w=await admin(req,res);if(!w)return;
+  const row=await D.getPublicListing(accessRequest[1]);if(!row)return send(res,404,{error:'listing_not_found'});
+  const passport=JSON.parse(row.passport),payload=passport.payload;
+  if(payload?.type!=='marketplace_agent_identity'||payload.agent_id!==row.agent_id||payload.name!==row.name||payload.category!==row.category||payload.description!==row.description||!await P.verifyIssued(passport))return send(res,422,{error:'listing_identity_invalid'});
+  const id=await D.requestMarketplaceAccess(accessRequest[1],w.id);
+  return id?send(res,201,{id,status:'pending',execution_available:false}):send(res,409,{error:'access_request_unavailable'});
+}
+const accessDecision=p.match(/^\/api\/marketplace\/access\/([a-f0-9]{32})$/);if(accessDecision&&m==='POST'){
+  const w=await admin(req,res);if(!w)return;const b=await body(req);
+  if(!['approve','reject','revoke','cancel'].includes(b.decision))return send(res,400,{error:'invalid_decision'});
+  const updated=await D.decideMarketplaceAccess(w.id,accessDecision[1],b.decision);
+  return updated?send(res,200,{updated:true,execution_available:false}):send(res,409,{error:'access_request_unavailable'});
+}
+const rentalLimits=p.match(/^\/api\/marketplace\/access\/([a-f0-9]{32})\/limits$/);if(rentalLimits&&m==='POST'){
+  const w=await admin(req,res);if(!w)return;const b=await body(req);
+  if(!amount(b.daily_limit_cents)||!Number.isInteger(b.daily_request_limit)||b.daily_request_limit<0||b.daily_request_limit>10000)return send(res,400,{error:'invalid_policy'});
+  return await D.setRentalLimits(w.id,rentalLimits[1],b.daily_limit_cents,b.daily_request_limit)?send(res,200,{updated:true}):send(res,404,{error:'access_unavailable'});
+}
+const rentalRun=p.match(/^\/api\/marketplace\/access\/([a-f0-9]{32})\/run$/);if(rentalRun&&m==='POST'){
+  const w=await admin(req,res);if(!w)return;
+  if(process.env.AUVEN_MARKETPLACE_EXECUTION!=='enabled')return send(res,503,{error:'marketplace_execution_unavailable'});
+  const b=await body(req),requestId=req.headers['idempotency-key'];
+  if(typeof b.prompt!=='string'||!b.prompt.trim()||b.prompt.length>16000||!Number.isInteger(b.max_tokens)||b.max_tokens<1||b.max_tokens>4096||typeof requestId!=='string'||requestId.length<8||requestId.length>128)return send(res,400,{error:'invalid_request'});
+  if(!providerKey)return send(res,503,{error:'provider_not_configured'});
+  const estimate=Math.ceil(b.max_tokens*0.2),reservation=await D.reserveRental(w.id,rentalRun[1],requestId,estimate,b.max_tokens);
+  if(reservation.error)return send(res,reservation.error==='access_unavailable'?403:409,{error:reservation.error});
+  const out=await providerCompletion([{role:'developer',content:reservation.instructions},{role:'user',content:b.prompt.trim()}],b.max_tokens);
+  if(out.error){await D.settle(reservation.event_id,'failed',out.error,0);return send(res,502,{error:out.error,event_id:reservation.event_id})}
+  const actual=Math.min(estimate,Math.ceil((out.result.usage?.total_tokens||b.max_tokens)*0.2));await D.settle(reservation.event_id,'allowed','provider_completed',actual);
+  let receipt=null;try{const hash=value=>'0x'+createHash('sha256').update(value).digest('hex');receipt=await P.sign({type:'marketplace_usage_receipt',version:1,agent_id:reservation.agent_id,event_id:reservation.event_id,request_sha256:hash(b.prompt.trim()),response_sha256:hash(JSON.stringify(out.result)),created_at:new Date().toISOString()})}catch(error){console.error('Marketplace receipt signing failed',error.message)}
+  return send(res,200,{event_id:reservation.event_id,result:out.result,receipt});
+}
 if(p==='/api/me'&&m==='GET'){const owner=await account(req);if(!owner)return send(res,401,{error:'invalid_session'});return send(res,200,await Accounts.profile(owner.id,owner.user))}
 if(p==='/api/token/status'&&m==='GET'){
   const owner=await account(req);if(!owner)return send(res,401,{error:'invalid_session'});

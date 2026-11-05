@@ -3,6 +3,11 @@ CREATE TABLE IF NOT EXISTS agents (id text PRIMARY KEY, workspace_id text NOT NU
 CREATE TABLE IF NOT EXISTS marketplace_listings (id text PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces(id), agent_id text NOT NULL UNIQUE REFERENCES agents(id), category text NOT NULL, description text NOT NULL, passport text NOT NULL, created_at text NOT NULL);
 ALTER TABLE marketplace_listings ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON marketplace_listings FROM PUBLIC, anon, authenticated;
+CREATE TABLE IF NOT EXISTS marketplace_access_requests (id text PRIMARY KEY, listing_id text NOT NULL REFERENCES marketplace_listings(id) ON DELETE CASCADE, renter_workspace_id text NOT NULL REFERENCES workspaces(id), status text NOT NULL CHECK(status IN ('pending','approved','rejected','revoked','cancelled')), created_at text NOT NULL, updated_at text NOT NULL, UNIQUE(listing_id,renter_workspace_id));
+ALTER TABLE marketplace_access_requests ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON marketplace_access_requests FROM PUBLIC, anon, authenticated;
+ALTER TABLE marketplace_access_requests ADD COLUMN IF NOT EXISTS daily_limit integer NOT NULL DEFAULT 0;
+ALTER TABLE marketplace_access_requests ADD COLUMN IF NOT EXISTS daily_request_limit integer NOT NULL DEFAULT 0;
 CREATE INDEX IF NOT EXISTS agents_workspace_idx ON agents(workspace_id);
 ALTER TABLE agents ADD COLUMN IF NOT EXISTS daily_request_limit integer NOT NULL DEFAULT 100 CHECK (daily_request_limit BETWEEN 0 AND 10000);
 ALTER TABLE agents ADD COLUMN IF NOT EXISTS max_tokens_per_request integer NOT NULL DEFAULT 4096 CHECK (max_tokens_per_request BETWEEN 1 AND 4096);
@@ -14,6 +19,9 @@ ALTER TABLE agents ADD COLUMN IF NOT EXISTS config_version integer NOT NULL DEFA
 CREATE TABLE IF NOT EXISTS events (id text PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces(id), agent_id text NOT NULL REFERENCES agents(id), request_id text NOT NULL, decision text NOT NULL, reason text NOT NULL, reserved integer NOT NULL DEFAULT 0, actual integer NOT NULL DEFAULT 0, created_at text NOT NULL, UNIQUE(agent_id,request_id));
 CREATE INDEX IF NOT EXISTS events_workspace_time_idx ON events(workspace_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS events_agent_time_idx ON events(agent_id,created_at);
+CREATE TABLE IF NOT EXISTS marketplace_usage (event_id text PRIMARY KEY REFERENCES events(id), request_id text NOT NULL, access_id text NOT NULL REFERENCES marketplace_access_requests(id) ON DELETE CASCADE, renter_workspace_id text NOT NULL REFERENCES workspaces(id), created_at text NOT NULL, UNIQUE(access_id,request_id));
+ALTER TABLE marketplace_usage ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON marketplace_usage FROM PUBLIC, anon, authenticated;
 CREATE TABLE IF NOT EXISTS action_requests (id text PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces(id), agent_id text NOT NULL REFERENCES agents(id), event_id text NOT NULL UNIQUE REFERENCES events(id), messages_json text NOT NULL, max_tokens integer NOT NULL, status text NOT NULL CHECK (status IN ('pending','processing','completed','denied','failed')), result_json text, created_at text NOT NULL, decided_at text);
 ALTER TABLE events ADD COLUMN IF NOT EXISTS model_tier text NOT NULL DEFAULT 'standard';
 ALTER TABLE action_requests ADD COLUMN IF NOT EXISTS model_tier text NOT NULL DEFAULT 'standard';
